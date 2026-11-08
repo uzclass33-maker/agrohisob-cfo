@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: agrohisob-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: agrohisob
+      POSTGRES_PASSWORD: agrohisob_secret
+      POSTGRES_DB: agrohisob_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/app/db/schema.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U agrohisob -d agrohisob_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: agrohisob-backend
+    restart: always
+    environment:
+      - DATABASE_URL=postgresql://agrohisob:agrohisob_secret@postgres:5432/agrohisob_db
+      - ENVIRONMENT=production
+      - DEBUG=False
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: agrohisob-frontend
+    restart: always
+    environment:
+      - NEXT_PUBLIC_BACKEND_URL=http://backend:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
