@@ -3,7 +3,7 @@
  * Strips any sensitive banking, tax, or PII parameters before dispatching.
  */
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+import { authFetch } from './api';
 
 export type AnalyticsEventType =
   | 'demo_started'
@@ -48,14 +48,14 @@ export async function trackEvent(
     };
 
     // Non-blocking fire-and-forget call
-    fetch(`${API_BASE}/api/v1/analytics/events`, {
+    authFetch('/api/v1/analytics/events', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     }).catch(() => {
       // Analytics should never break user interactions
     });
-  } catch (err) {
+  } catch {
     // Silent fail for analytics
   }
 }

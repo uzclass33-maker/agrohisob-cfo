@@ -160,17 +160,17 @@ function CreditReportContent() {
   }, [checklist, checklistFilter]);
 
   return (
-    <div className="py-8 bg-slate-50 min-h-screen">
+    <div className="page-shell py-8 lg:py-10">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
         
         {/* Top Header & Export Controls */}
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-white p-6 rounded-xl border border-slate-200/80 shadow-card">
           <div>
-            <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-semibold mb-2">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-              <span>Assignment 5 — Professional Bank Dossier & Financial Engine</span>
+            <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-agro-100 text-agro-800 text-xs font-semibold mb-2">
+              <ShieldCheck className="w-3.5 h-3.5 text-agro-700" />
+              <span>Professional Bank Dosyesi & Moliyaviy Baholash Tizimi</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-bold text-navy-950 tracking-tight">
               Bank Kreditga Tayyorgarlik Dosyesi va Moliyaviy Modeli
             </h1>
             <p className="text-xs sm:text-sm text-slate-600 mt-1 max-w-2xl">
@@ -183,7 +183,7 @@ function CreditReportContent() {
             <button
               onClick={() => handleGenerateAndDownload('pdf')}
               disabled={generating || loading}
-              className="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold shadow-sm inline-flex items-center transition disabled:opacity-50"
+              className="px-4 py-2.5 bg-navy-900 hover:bg-navy-800 text-white rounded-lg text-xs font-bold shadow-card inline-flex items-center transition disabled:opacity-50"
             >
               <Download className="w-4 h-4 mr-2 text-emerald-400" />
               PDF Dosye Yuklab Olish
@@ -191,14 +191,14 @@ function CreditReportContent() {
             <button
               onClick={() => handleGenerateAndDownload('xlsx')}
               disabled={generating || loading}
-              className="px-4 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold shadow-sm inline-flex items-center transition disabled:opacity-50"
+              className="px-4 py-2.5 bg-agro-700 hover:bg-agro-800 text-white rounded-lg text-xs font-bold shadow-card inline-flex items-center transition disabled:opacity-50"
             >
               <FileSpreadsheet className="w-4 h-4 mr-2" />
               Excel Model Yuklab Olish
             </button>
             <button
               onClick={() => setShowConfig(!showConfig)}
-              className="px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold border border-slate-200 inline-flex items-center transition"
+              className="px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold border border-slate-200 inline-flex items-center transition"
             >
               <Sliders className="w-3.5 h-3.5 mr-1.5" />
               Kredit Shartlari
@@ -215,7 +215,7 @@ function CreditReportContent() {
         )}
 
         {/* Business Entity Switcher */}
-        <div className="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm flex flex-wrap gap-2 items-center">
+        <div className="bg-white p-3 rounded-xl border border-slate-200/80 shadow-card flex flex-wrap gap-2 items-center">
           <span className="text-xs font-bold text-slate-500 uppercase px-2 flex items-center">
             <Building2 className="w-3.5 h-3.5 mr-1" /> Korxona:
           </span>
@@ -228,7 +228,7 @@ function CreditReportContent() {
               }}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
                 sc.id === selectedOrgId
-                  ? 'bg-emerald-700 text-white shadow-sm'
+                  ? 'bg-navy-900 text-white shadow-card'
                   : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
               }`}
             >
@@ -239,7 +239,7 @@ function CreditReportContent() {
 
         {/* Configurable Credit Parameters Panel (Collapsible) */}
         {showConfig && profile && (
-          <div className="bg-white p-6 rounded-2xl border border-emerald-200 shadow-md space-y-4">
+          <div className="bg-white p-6 rounded-xl border border-agro-200 shadow-card space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h3 className="text-sm font-bold text-slate-800 flex items-center">
                 <Sliders className="w-4 h-4 mr-2 text-emerald-600" />
@@ -332,7 +332,7 @@ function CreditReportContent() {
               </button>
               <button
                 onClick={handleApplyProfileChanges}
-                className="px-4 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-xs font-bold transition shadow-sm"
+                className="px-4 py-1.5 bg-agro-700 hover:bg-agro-800 text-white rounded-lg text-xs font-bold transition shadow-card"
               >
                 Qayta Hisoblash
               </button>
@@ -381,13 +381,13 @@ function CreditReportContent() {
 
         {/* Loading / Error States */}
         {loading ? (
-          <div className="p-16 text-center bg-white rounded-2xl border border-slate-200 shadow-sm">
+          <div className="p-16 text-center bg-white rounded-xl border border-slate-200 shadow-card">
             <RefreshCw className="w-8 h-8 text-emerald-600 animate-spin mx-auto mb-3" />
             <p className="text-xs font-semibold text-slate-600">Kredit dosyesi va moliyaviy prognoz hisoblanmoqda...</p>
             <p className="text-[11px] text-slate-400 mt-1">Deterministik moliyaviy dvigatel ishlamoqda</p>
           </div>
         ) : error ? (
-          <div className="p-6 bg-rose-50 border border-rose-200 text-rose-800 rounded-2xl text-xs flex items-start space-x-3">
+          <div className="p-6 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl text-xs flex items-start space-x-3">
             <AlertCircle className="w-5 h-5 text-rose-600 flex-shrink-0" />
             <div>
               <p className="font-bold">Xatolik aniqlandi</p>
@@ -401,7 +401,7 @@ function CreditReportContent() {
               <div className="space-y-6">
                 
                 {/* 1. Executive Summary & Readiness Scorecard */}
-                <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+                <div className="bg-white p-6 sm:p-8 rounded-xl border border-slate-200 shadow-card space-y-6">
                   <div className="border-b border-slate-100 pb-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div>
                       <span className="text-xs font-bold text-emerald-700 uppercase tracking-widest block">
@@ -513,7 +513,7 @@ function CreditReportContent() {
                 </div>
 
                 {/* 2. Historical Financial Analysis */}
-                <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                <div className="bg-white p-6 sm:p-8 rounded-xl border border-slate-200 shadow-card space-y-4">
                   <span className="text-xs font-bold text-emerald-700 uppercase tracking-widest block">
                     2. Tarixiy Moliyaviy Ko'rsatkichlar Tahlili (O'tgan 12 oy)
                   </span>
@@ -564,7 +564,7 @@ function CreditReportContent() {
                 </div>
 
                 {/* 3. 12-Month Seasonal Forecast */}
-                <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                <div className="bg-white p-6 sm:p-8 rounded-xl border border-slate-200 shadow-card space-y-4">
                   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                     <div>
                       <span className="text-xs font-bold text-emerald-700 uppercase tracking-widest block">
@@ -634,7 +634,7 @@ function CreditReportContent() {
                 </div>
 
                 {/* 4. Debt & DSCR Analysis */}
-                <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+                <div className="bg-white p-6 sm:p-8 rounded-xl border border-slate-200 shadow-card space-y-6">
                   <div>
                     <span className="text-xs font-bold text-emerald-700 uppercase tracking-widest block">
                       4. Qarz Yuklamasi va DSCR Qoplash Tahlili
@@ -720,7 +720,7 @@ function CreditReportContent() {
                 </div>
 
                 {/* 5. Risk & Scenario Analysis */}
-                <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                <div className="bg-white p-6 sm:p-8 rounded-xl border border-slate-200 shadow-card space-y-4">
                   <span className="text-xs font-bold text-emerald-700 uppercase tracking-widest block">
                     5. Xatarlar va Stress-Ssenariylar Tahlili
                   </span>
@@ -761,7 +761,7 @@ function CreditReportContent() {
                 </div>
 
                 {/* 6. Statutory Disclaimer Box */}
-                <div className="p-5 rounded-2xl bg-amber-50 border border-amber-200 text-xs text-amber-900 leading-relaxed space-y-2">
+                <div className="p-5 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900 leading-relaxed space-y-2">
                   <div className="flex items-center space-x-2 font-bold text-amber-950">
                     <Scale className="w-4 h-4 text-amber-700 flex-shrink-0" />
                     <span>RASMIY OGOHLANTIRISH VA HUQUQIY CHEKLOV</span>
@@ -773,7 +773,7 @@ function CreditReportContent() {
 
             {/* TAB 2: DOCUMENT READINESS CHECKLIST */}
             {activeTab === 'checklist' && (
-              <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+              <div className="bg-white p-6 sm:p-8 rounded-xl border border-slate-200 shadow-card space-y-6">
                 <div>
                   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                     <div>
@@ -886,7 +886,7 @@ function CreditReportContent() {
 
             {/* TAB 3: REPORT GENERATION HISTORY & DOWNLOADS */}
             {activeTab === 'history' && (
-              <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+              <div className="bg-white p-6 sm:p-8 rounded-xl border border-slate-200 shadow-card space-y-6">
                 <div>
                   <span className="text-xs font-bold text-emerald-700 uppercase tracking-widest block">
                     Avval Yaratilgan Hisobotlar Tarixi
@@ -954,7 +954,7 @@ function CreditReportContent() {
                                   href={getFullDownloadUrl(rep.xlsx_url)}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="inline-flex items-center px-2.5 py-1 bg-emerald-700 hover:bg-emerald-800 text-white rounded text-[11px] font-semibold transition"
+                                  className="inline-flex items-center px-2.5 py-1 bg-agro-700 hover:bg-agro-800 text-white rounded text-[11px] font-semibold transition"
                                 >
                                   <FileSpreadsheet className="w-3 h-3 mr-1" />
                                   Excel
@@ -979,7 +979,7 @@ function CreditReportContent() {
 export default function CreditReportPage() {
   return (
     <Suspense fallback={
-      <div className="py-12 text-center bg-slate-50 min-h-screen flex items-center justify-center">
+      <div className="py-12 text-center bg-canvas min-h-screen flex items-center justify-center">
         <div className="flex items-center space-x-2 text-slate-500 text-sm">
           <RefreshCw className="w-5 h-5 animate-spin text-emerald-600" />
           <span>Kredit dosyesi yuklanmoqda...</span>

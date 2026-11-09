@@ -101,7 +101,7 @@ export interface CreditReadinessScorecard {
 }
 
 // -------------------------------------------------------------------------
-// ASSIGNMENT 2 TYPES: Calculation Engine, Amortization, DSCR, Scenarios, Risk
+// CORE FINANCIAL ENGINE TYPES: Calculation Engine, Amortization, DSCR, Scenarios, Risk
 // -------------------------------------------------------------------------
 export interface RepaymentScheduleItem {
   period_number: number;
@@ -164,7 +164,7 @@ export interface ScenarioComparisonItem {
 }
 
 // -------------------------------------------------------------------------
-// ASSIGNMENT 4 TYPES: AI-CFO Financial Dashboard, Intelligence & Analytics
+// AI-CFO FINANCIAL DASHBOARD TYPES: Intelligence & Analytics
 // -------------------------------------------------------------------------
 export interface DashboardOverviewKPIs {
   total_inflows: number;
@@ -370,7 +370,7 @@ export interface ScenarioComparisonResponse {
 }
 
 // =========================================================================
-// ASSIGNMENT 5: CREDIT DOSSIER & REPORTING TYPES
+// CREDIT DOSSIER & REPORTING TYPES
 // =========================================================================
 
 export type LoanPurpose =
@@ -592,7 +592,7 @@ export interface GeneratedReportRecord {
 }
 
 // ==========================================
-// ASSIGNMENT 6: COLLATERAL, SUBSIDIES & REGULATORY TYPES
+// COLLATERAL, SUBSIDIES & REGULATORY TYPES
 // ==========================================
 
 export interface RegulatorySourceRecord {

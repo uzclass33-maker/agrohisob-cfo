@@ -74,7 +74,7 @@ function ScenarioAnalysisContent() {
   };
 
   return (
-    <div className="py-8 bg-slate-50 min-h-screen">
+    <div className="page-shell py-8 lg:py-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
         
         {/* Header */}
@@ -84,7 +84,7 @@ function ScenarioAnalysisContent() {
               <Sliders className="w-3.5 h-3.5 text-sky-600" />
               <span>Sensitivity & Stress-Testing Engine</span>
             </div>
-            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
+            <h1 className="text-3xl font-bold tracking-tight text-navy-950 sm:text-4xl">
               Hosil, Narx va Xarajatlar Stress-Testi
             </h1>
             <p className="text-xs sm:text-sm text-slate-600 mt-1">
@@ -95,7 +95,7 @@ function ScenarioAnalysisContent() {
           <div className="flex items-center space-x-2">
             <button
               onClick={resetShocks}
-              className="px-3.5 py-2 bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 rounded-xl text-xs font-semibold shadow-sm inline-flex items-center"
+              className="px-3.5 py-2 bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 rounded-lg text-xs font-semibold shadow-card inline-flex items-center"
             >
               <RotateCcw className="w-3.5 h-3.5 mr-1.5" />
               Nolga Qaytarish (Bazaviy Holat)
@@ -104,7 +104,7 @@ function ScenarioAnalysisContent() {
         </div>
 
         {/* Business Selector */}
-        <div className="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm flex flex-wrap gap-2 items-center">
+        <div className="bg-white p-3 rounded-xl border border-slate-200/80 shadow-card flex flex-wrap gap-2 items-center">
           <span className="text-xs font-bold text-slate-500 uppercase px-2">Korxona:</span>
           {scenarios.map((sc) => (
             <button
@@ -115,7 +115,7 @@ function ScenarioAnalysisContent() {
               }}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
                 sc.id === selectedScenarioId
-                  ? 'bg-agro-600 text-white shadow-sm'
+                  ? 'bg-navy-900 text-white shadow-card'
                   : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
               }`}
             >
@@ -125,8 +125,8 @@ function ScenarioAnalysisContent() {
         </div>
 
         {/* Shock Sliders Box */}
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-          <h3 className="font-bold text-slate-900 mb-4 text-sm sm:text-base">
+        <div className="bg-white p-6 rounded-xl border border-slate-200/80 shadow-card">
+          <h3 className="font-bold text-navy-950 mb-4 text-sm sm:text-base">
             Stress-Test Parametrlari (Shok Omillari)
           </h3>
 
@@ -146,7 +146,7 @@ function ScenarioAnalysisContent() {
                 step="5"
                 value={yieldShock}
                 onChange={(e) => setYieldShock(Number(e.target.value))}
-                className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-agro-600"
+                className="w-full cursor-pointer accent-agro-600"
               />
               <span className="text-[10px] text-slate-400">Ayoz, qurg'oqchilik yoki kasallik ta'siri</span>
             </div>
@@ -166,7 +166,7 @@ function ScenarioAnalysisContent() {
                 step="5"
                 value={priceShock}
                 onChange={(e) => setPriceShock(Number(e.target.value))}
-                className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-agro-600"
+                className="w-full cursor-pointer accent-agro-600"
               />
               <span className="text-[10px] text-slate-400">Bozor taklifi ko'payishi yoki eksport narxi</span>
             </div>
@@ -186,7 +186,7 @@ function ScenarioAnalysisContent() {
                 step="5"
                 value={costShock}
                 onChange={(e) => setCostShock(Number(e.target.value))}
-                className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-rose-600"
+                className="w-full cursor-pointer accent-rose-600"
               />
               <span className="text-[10px] text-slate-400">Dizel, o'g'it va logistika qimmatlashuvi</span>
             </div>
@@ -206,7 +206,7 @@ function ScenarioAnalysisContent() {
                 step="0.5"
                 value={interestRate}
                 onChange={(e) => setInterestRate(Number(e.target.value))}
-                className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                className="w-full cursor-pointer accent-navy-700"
               />
               <span className="text-[10px] text-slate-400">10-14% Imtiyozli | 23.5% Tijoriy</span>
             </div>
@@ -215,12 +215,12 @@ function ScenarioAnalysisContent() {
 
         {/* Results */}
         {loading ? (
-          <div className="p-8 text-center bg-white rounded-2xl border border-slate-200">
+          <div className="p-8 text-center bg-white rounded-xl border border-slate-200/80 shadow-card">
             <RefreshCw className="w-6 h-6 text-sky-600 animate-spin mx-auto mb-2" />
             <p className="text-xs text-slate-500">Stoxastik stress-test modeli qayta hisoblanmoqda...</p>
           </div>
         ) : error ? (
-          <div className="p-6 bg-rose-50 border border-rose-200 text-rose-800 rounded-2xl text-xs">
+          <div className="p-6 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl text-xs">
             {error}
           </div>
         ) : result ? (
@@ -244,7 +244,7 @@ function ScenarioAnalysisContent() {
 
             {/* Baseline vs Stressed Comparative Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+              <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-card">
                 <span className="text-[11px] font-semibold text-slate-400 block uppercase">Yillik Yalpi Tushum</span>
                 <div className="mt-1 flex items-baseline justify-between">
                   <span className="text-base font-bold text-slate-900">{formatCompactUZS(result.stressed_annual_inflow)}</span>
@@ -253,7 +253,7 @@ function ScenarioAnalysisContent() {
                 <span className="text-[10px] text-slate-500">Shokdan keyingi kassa kirimi</span>
               </div>
 
-              <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+              <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-card">
                 <span className="text-[11px] font-semibold text-slate-400 block uppercase">Yillik Xarajatlar</span>
                 <div className="mt-1 flex items-baseline justify-between">
                   <span className="text-base font-bold text-rose-600">{formatCompactUZS(result.stressed_annual_outflow)}</span>
@@ -262,7 +262,7 @@ function ScenarioAnalysisContent() {
                 <span className="text-[10px] text-slate-500">Inflyatsiya hisobga olingan holda</span>
               </div>
 
-              <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+              <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-card">
                 <span className="text-[11px] font-semibold text-slate-400 block uppercase">DSCR O'zgarishi</span>
                 <div className="mt-1 flex items-baseline justify-between">
                   <span className="text-base font-bold text-indigo-700">{result.stressed_dscr}x</span>
@@ -273,7 +273,7 @@ function ScenarioAnalysisContent() {
                 </span>
               </div>
 
-              <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+              <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-card">
                 <span className="text-[11px] font-semibold text-slate-400 block uppercase">Defitsit Oylari</span>
                 <div className="mt-1 flex items-baseline justify-between">
                   <span className="text-base font-bold text-amber-700">{result.deficit_months_stressed} oy</span>
@@ -300,7 +300,7 @@ function ScenarioAnalysisContent() {
 export default function ScenarioAnalysisPage() {
   return (
     <Suspense fallback={
-      <div className="py-12 text-center bg-slate-50 min-h-screen flex items-center justify-center">
+      <div className="py-12 text-center bg-canvas min-h-screen flex items-center justify-center">
         <div className="flex items-center space-x-2 text-slate-500 text-sm">
           <RefreshCw className="w-5 h-5 animate-spin text-sky-600" />
           <span>Stress-test moduli yuklanmoqda...</span>

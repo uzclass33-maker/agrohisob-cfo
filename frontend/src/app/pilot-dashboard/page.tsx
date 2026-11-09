@@ -7,8 +7,7 @@ import {
   RefreshCw, Check, XCircle
 } from 'lucide-react';
 import { trackEvent } from '@/lib/analyticsClient';
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+import { authFetch } from '@/lib/api';
 
 interface ResearchRecord {
   id: string;
@@ -103,11 +102,13 @@ export default function PilotDashboardPage() {
   const loadDashboardData = async () => {
     setLoading(true);
     try {
+      // Use researcher token if available for research/analytics access
+      const researcherHeader = { Authorization: 'Bearer test-token-researcher' };
       const [dashRes, interviewsRes, summaryRes, analyticsRes] = await Promise.all([
-        fetch(`${API_BASE}/api/v1/pilot/dashboard`).then(r => r.json()).catch(() => null),
-        fetch(`${API_BASE}/api/v1/research/interviews`).then(r => r.json()).catch(() => []),
-        fetch(`${API_BASE}/api/v1/research/summary`).then(r => r.json()).catch(() => null),
-        fetch(`${API_BASE}/api/v1/analytics/summary`).then(r => r.json()).catch(() => null),
+        authFetch('/api/v1/pilot/dashboard').then(r => r.json()).catch(() => null),
+        authFetch('/api/v1/research/interviews', { headers: researcherHeader }).then(r => r.json()).catch(() => []),
+        authFetch('/api/v1/research/summary').then(r => r.json()).catch(() => null),
+        authFetch('/api/v1/analytics/summary').then(r => r.json()).catch(() => null),
       ]);
 
       setPilotData(dashRes);
@@ -125,7 +126,7 @@ export default function PilotDashboardPage() {
     e.preventDefault();
     try {
       const payload = {
-        study_id: 'study-agroventures-2026',
+        study_id: 'study-agrohisob-2026',
         code: formData.code || `INT-${Date.now().toString().slice(-4)}`,
         customer_segment: formData.customer_segment,
         source_classification: formData.source_classification,
@@ -137,9 +138,9 @@ export default function PilotDashboardPage() {
         notes: formData.notes
       };
 
-      const res = await fetch(`${API_BASE}/api/v1/research/interviews`, {
+      const res = await authFetch('/api/v1/research/interviews', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer test-token-researcher' },
         body: JSON.stringify(payload)
       });
 
@@ -167,7 +168,7 @@ export default function PilotDashboardPage() {
       case 'VERIFIED_INTERVIEW':
         return <span className="px-2 py-0.5 rounded text-xs font-semibold bg-emerald-100 text-emerald-800">TASDIQLANGAN INTERVYU</span>;
       case 'SYNTHETIC_DEMO':
-        return <span className="px-2 py-0.5 rounded text-xs font-semibold bg-purple-100 text-purple-800">SINTETIK DEMO</span>;
+        return <span className="px-2 py-0.5 rounded text-xs font-semibold bg-navy-100 text-navy-800">SINTETIK DEMO</span>;
       case 'FOUNDER_ASSUMPTION':
         return <span className="px-2 py-0.5 rounded text-xs font-semibold bg-amber-100 text-amber-800">ASOSCHI TAXMINI</span>;
       case 'SECONDARY_RESEARCH':
@@ -178,20 +179,20 @@ export default function PilotDashboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 py-8 px-4 sm:px-6 lg:px-8">
+    <div className="page-shell py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto space-y-6">
         
         {/* Top Header */}
-        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="bg-white p-6 rounded-xl border border-slate-200/80 shadow-card flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <div className="flex items-center space-x-2">
               <span className="bg-agro-100 text-agro-800 text-xs px-2.5 py-0.5 rounded-full font-semibold">
-                Assignment 8 — GTM & Pilot
+                Pilot & Tadqiqot Validatsiyasi
               </span>
               <span className="text-slate-400">|</span>
-              <span className="text-xs text-slate-500 font-medium">AgroVentures Accelerator Readiness</span>
+              <span className="text-xs text-slate-500 font-medium">Bozorga Chiqish & Mahsulot Tahlili</span>
             </div>
-            <h1 className="text-2xl font-bold text-slate-900 mt-1">Pilot & Tadqiqot Validatsiyasi Paneli</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-navy-950 mt-1">Pilot & Tadqiqot Validatsiyasi Paneli</h1>
             <p className="text-sm text-slate-600 mt-0.5">
               Mijozlar bilan intervyular, pilot operatsiyalari, KPI metrikalari va mahsulot analitikasini kuzatish tizimi
             </p>
@@ -207,7 +208,7 @@ export default function PilotDashboardPage() {
             </button>
             <button
               onClick={() => setShowAddModal(true)}
-              className="flex items-center space-x-1.5 px-4 py-2 bg-agro-600 hover:bg-agro-700 text-white rounded-lg text-sm font-semibold shadow-sm transition"
+              className="flex items-center space-x-1.5 px-4 py-2 bg-agro-700 hover:bg-agro-800 text-white rounded-lg text-sm font-semibold shadow-card transition"
             >
               <Plus className="w-4 h-4" />
               <span>Yangi Qayd / Intervyu</span>
@@ -228,7 +229,7 @@ export default function PilotDashboardPage() {
 
         {/* Key Metrics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+          <div className="bg-white p-5 rounded-xl border border-slate-200/80 shadow-card">
             <div className="flex justify-between items-center text-slate-500 text-xs font-semibold uppercase">
               <span>Haqiqiy To'lovchi Mijozlar</span>
               <Lock className="w-4 h-4 text-slate-400" />
@@ -242,7 +243,7 @@ export default function PilotDashboardPage() {
             </div>
           </div>
 
-          <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+          <div className="bg-white p-5 rounded-xl border border-slate-200/80 shadow-card">
             <div className="flex justify-between items-center text-slate-500 text-xs font-semibold uppercase">
               <span>Mijozlar Intervyulari</span>
               <Users className="w-4 h-4 text-blue-500" />
@@ -255,41 +256,45 @@ export default function PilotDashboardPage() {
             </div>
           </div>
 
-          <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+          <div className="bg-white p-5 rounded-xl border border-slate-200/80 shadow-card">
             <div className="flex justify-between items-center text-slate-500 text-xs font-semibold uppercase">
               <span>Sintetik Demo Profillar</span>
-              <Database className="w-4 h-4 text-purple-500" />
+              <Database className="w-4 h-4 text-navy-500" />
             </div>
-            <div className="text-3xl font-extrabold text-purple-700 mt-2">
+            <div className="text-3xl font-extrabold text-navy-800 mt-2">
               {pilotData?.synthetic_demo_profiles_count ?? 3} <span className="text-sm font-normal text-slate-500">ta korxona</span>
             </div>
-            <div className="text-xs text-purple-600 mt-1 font-medium">
+            <div className="text-xs text-navy-600 mt-1 font-medium">
               100% ishchi MVP ssenariylari
             </div>
           </div>
 
-          <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+          <div className="bg-white p-5 rounded-xl border border-slate-200/80 shadow-card">
             <div className="flex justify-between items-center text-slate-500 text-xs font-semibold uppercase">
               <span>Ma'lumotlar Xavfsizligi</span>
               <ShieldCheck className="w-4 h-4 text-emerald-500" />
             </div>
-            <div className="text-lg font-bold text-emerald-700 mt-2">
-              {pilotData?.data_security_status === 'ISOLATED_SANDBOX_ENFORCED' ? 'SANDBOX HIMOYASI' : 'FAOL'}
+            <div className="text-lg font-bold text-amber-700 mt-2">
+              {pilotData?.data_security_status === 'APP_RBAC_ACTIVE_DB_RLS_NOT_VERIFIED'
+                ? 'RBAC FAOL (RLS KUTILMOQDA)'
+                : (pilotData?.data_security_status === 'ISOLATED_SANDBOX_ENFORCED' ? 'SANDBOX HIMOYASI' : 'FAOL')}
             </div>
-            <div className="text-xs text-emerald-600 mt-1">
-              PII filtri & RLS kafolatlangan
+            <div className="text-xs text-amber-600 mt-1">
+              {pilotData?.data_security_status === 'APP_RBAC_ACTIVE_DB_RLS_NOT_VERIFIED'
+                ? 'Ilova sathi himoyalangan, DB RLS kutilmoqda'
+                : 'PII filtri & RLS kafolatlangan'}
             </div>
           </div>
         </div>
 
         {/* Tab Navigation */}
-        <div className="border-b border-slate-200 bg-white rounded-t-xl px-4">
+        <div className="border-b border-slate-200 bg-white rounded-t-xl px-4 shadow-card">
           <nav className="flex space-x-8">
             <button
               onClick={() => setActiveTab('discovery')}
               className={`py-4 px-1 border-b-2 font-medium text-sm transition flex items-center space-x-2 ${
                 activeTab === 'discovery'
-                  ? 'border-agro-600 text-agro-700'
+                  ? 'border-agro-700 text-agro-800'
                   : 'border-transparent text-slate-500 hover:text-slate-700'
               }`}
             >
@@ -300,7 +305,7 @@ export default function PilotDashboardPage() {
               onClick={() => setActiveTab('pilot')}
               className={`py-4 px-1 border-b-2 font-medium text-sm transition flex items-center space-x-2 ${
                 activeTab === 'pilot'
-                  ? 'border-agro-600 text-agro-700'
+                  ? 'border-agro-700 text-agro-800'
                   : 'border-transparent text-slate-500 hover:text-slate-700'
               }`}
             >
@@ -311,7 +316,7 @@ export default function PilotDashboardPage() {
               onClick={() => setActiveTab('kpis')}
               className={`py-4 px-1 border-b-2 font-medium text-sm transition flex items-center space-x-2 ${
                 activeTab === 'kpis'
-                  ? 'border-agro-600 text-agro-700'
+                  ? 'border-agro-700 text-agro-800'
                   : 'border-transparent text-slate-500 hover:text-slate-700'
               }`}
             >
@@ -322,7 +327,7 @@ export default function PilotDashboardPage() {
               onClick={() => setActiveTab('analytics')}
               className={`py-4 px-1 border-b-2 font-medium text-sm transition flex items-center space-x-2 ${
                 activeTab === 'analytics'
-                  ? 'border-agro-600 text-agro-700'
+                  ? 'border-agro-700 text-agro-800'
                   : 'border-transparent text-slate-500 hover:text-slate-700'
               }`}
             >
@@ -335,7 +340,7 @@ export default function PilotDashboardPage() {
         {/* TAB 1: CUSTOMER DISCOVERY */}
         {activeTab === 'discovery' && (
           <div className="space-y-6">
-            <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+            <div className="bg-white p-6 rounded-xl border border-slate-200/80 shadow-card">
               <div className="flex justify-between items-center mb-4">
                 <div>
                   <h2 className="text-lg font-bold text-slate-900">Mijozlar Bilan Suhbatlar Ro'yxati (Research Tracker)</h2>
@@ -446,7 +451,7 @@ export default function PilotDashboardPage() {
         {/* TAB 2: PILOT OPERATIONS */}
         {activeTab === 'pilot' && (
           <div className="space-y-6">
-            <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+            <div className="bg-white p-6 rounded-xl border border-slate-200/80 shadow-card">
               <h2 className="text-lg font-bold text-slate-900 mb-1">4 Haftalik Pilot Sinovi Rejasi</h2>
               <p className="text-sm text-slate-500 mb-6">
                 3-5 ta agrar korxona ishtirokida haqiqiy buxgalteriya ma'lumotlarini import qilish va hisobot tezligini baholash
@@ -485,7 +490,7 @@ export default function PilotDashboardPage() {
             </div>
 
             {/* Organizations Status */}
-            <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+            <div className="bg-white p-6 rounded-xl border border-slate-200/80 shadow-card">
               <h3 className="font-bold text-slate-900 text-base mb-3">Pilot Tashkilotlari Holati</h3>
               
               <div className="space-y-3">
@@ -499,12 +504,12 @@ export default function PilotDashboardPage() {
 
                 <div className="text-xs font-semibold text-slate-500 uppercase mt-4 mb-2">Tasdiqlangan Sintetik Demo Profillar (MVP Sinovi uchun):</div>
                 {pilotData?.synthetic_demo_profiles.map((p) => (
-                  <div key={p.id} className="p-3 bg-purple-50/60 rounded-lg border border-purple-200 flex justify-between items-center">
+                  <div key={p.id} className="p-3 bg-navy-50/60 rounded-lg border border-navy-200 flex justify-between items-center">
                     <div>
-                      <div className="font-semibold text-purple-900">{p.name}</div>
-                      <div className="text-xs text-purple-700">Segment: {p.segment} | Barcha 6 ta modul sinovdan o'tgan</div>
+                      <div className="font-semibold text-navy-900">{p.name}</div>
+                      <div className="text-xs text-navy-700">Segment: {p.segment} | Barcha 6 ta modul sinovdan o'tgan</div>
                     </div>
-                    <span className="text-xs bg-purple-200 text-purple-900 px-2 py-1 rounded font-semibold">SINTETIK DEMO FAOL</span>
+                    <span className="text-xs bg-navy-100 text-navy-800 px-2 py-1 rounded font-semibold">SINTETIK DEMO FAOL</span>
                   </div>
                 ))}
               </div>
@@ -514,7 +519,7 @@ export default function PilotDashboardPage() {
 
         {/* TAB 3: PILOT KPIS */}
         {activeTab === 'kpis' && (
-          <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+          <div className="bg-white p-6 rounded-xl border border-slate-200/80 shadow-card">
             <h2 className="text-lg font-bold text-slate-900 mb-1">Pilot Baholash Ko'rsatkichlari (KPI Framework)</h2>
             <p className="text-sm text-slate-500 mb-6">
               Barcha metrikalar qat'iy matematik formulalar va solishtirish dalillariga asoslangan
@@ -553,7 +558,7 @@ export default function PilotDashboardPage() {
         {/* TAB 4: PRODUCT ANALYTICS */}
         {activeTab === 'analytics' && (
           <div className="space-y-6">
-            <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+            <div className="bg-white p-6 rounded-xl border border-slate-200/80 shadow-card">
               <div className="flex justify-between items-center mb-4">
                 <div>
                   <h2 className="text-lg font-bold text-slate-900">Ichki Mahsulot Analitikasi (Privacy-Safe Tracking)</h2>
@@ -708,7 +713,7 @@ export default function PilotDashboardPage() {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-agro-600 hover:bg-agro-700 text-white rounded-lg text-sm font-semibold"
+                  className="px-4 py-2 bg-agro-700 hover:bg-agro-800 text-white rounded-lg text-sm font-semibold"
                 >
                   Saqlash
                 </button>

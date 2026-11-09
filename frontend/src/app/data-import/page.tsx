@@ -148,11 +148,11 @@ export default function DataImportPage() {
       } else {
         const csvContent = 
 `Sana;Faktura raqami;Yetkazib beruvchi;Xaridor;Yetkazib beruvchi STIR;Xaridor STIR;MXIK kodi;Tovar va xizmatlar tavsifi;Summa;QQS summasi
-2026-03-15;SF-2026/0114;Farg'onaAzot AJ;Agro Ventures Farm MChJ;200025114;309876543;20.15.10.101;Karbamid va ammofos mineral o'g'itlari;28000000;3360000
-2026-03-22;SF-2026/0290;O'zbekneftgaz YoQSh;Agro Ventures Farm MChJ;200115542;309876543;19.20.21.000;Dizel yoqilg'isi E-5 (solyarka);18500000;2220000
-2026-04-05;SF-2026/0441;MTP Agrotexnika Servis MChJ;Agro Ventures Farm MChJ;205667788;309876543;01.61.10.000;Traktor haydov va kultivatsiya xizmatlari;14000000;1680000
-2026-07-28;SF-2026/0890;Agro Ventures Farm MChJ;Toshkent Agro Klaster MChJ;309876543;305112233;01.16.11.000;Paxta xomashyosi 1-nav;160000000;19200000
-2026-08-15;SF-2026/1012;Agro Ventures Farm MChJ;O'zdonmahsulot AJ;309876543;302998877;01.11.12.000;Oziq-ovqat bug'doyi 3-sinf;95000000;11400000`;
+2026-03-15;SF-2026/0114;Farg'onaAzot AJ;AgroBaraka Farm MChJ;200025114;309876543;20.15.10.101;Karbamid va ammofos mineral o'g'itlari;28000000;3360000
+2026-03-22;SF-2026/0290;O'zbekneftgaz YoQSh;AgroBaraka Farm MChJ;200115542;309876543;19.20.21.000;Dizel yoqilg'isi E-5 (solyarka);18500000;2220000
+2026-04-05;SF-2026/0441;MTP Agrotexnika Servis MChJ;AgroBaraka Farm MChJ;205667788;309876543;01.61.10.000;Traktor haydov va kultivatsiya xizmatlari;14000000;1680000
+2026-07-28;SF-2026/0890;AgroBaraka Farm MChJ;Toshkent Agro Klaster MChJ;309876543;305112233;01.16.11.000;Paxta xomashyosi 1-nav;160000000;19200000
+2026-08-15;SF-2026/1012;AgroBaraka Farm MChJ;O'zdonmahsulot AJ;309876543;302998877;01.11.12.000;Oziq-ovqat bug'doyi 3-sinf;95000000;11400000`;
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         file = new File([blob], `namuna_soliq_efaktura_${Date.now()}.csv`, { type: 'text/csv' });
       }
@@ -220,7 +220,7 @@ export default function DataImportPage() {
   }) || [];
 
   return (
-    <div className="py-10 bg-slate-50 min-h-screen">
+    <div className="page-shell py-10 lg:py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
         
         {/* Header */}
@@ -229,7 +229,7 @@ export default function DataImportPage() {
             <FileSpreadsheet className="w-3.5 h-3.5 text-agro-600" />
             <span>Smart Data Ingestion & Ledger Separation</span>
           </div>
-          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
+          <h1 className="text-3xl font-bold tracking-tight text-navy-950 sm:text-4xl">
             Aqlli Moliyaviy Ma&apos;lumotlar Importi & Toifalash
           </h1>
           <p className="mt-2 text-slate-600 text-sm sm:text-base leading-relaxed">
@@ -240,7 +240,7 @@ export default function DataImportPage() {
         </div>
 
         {/* Security & Regulatory Notice */}
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-card flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-start space-x-3">
             <Shield className="w-6 h-6 text-agro-600 shrink-0 mt-0.5" />
             <div>
@@ -279,13 +279,13 @@ export default function DataImportPage() {
         )}
 
         {/* Stage 1: Upload Container */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div className="bg-white rounded-xl border border-slate-200 shadow-card overflow-hidden">
           <div className="border-b border-slate-200 bg-slate-50/60 p-3 flex flex-wrap gap-2">
             <button
               onClick={() => { setDocType('BANK_STATEMENT'); }}
               className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-2 ${
                 docType === 'BANK_STATEMENT'
-                  ? 'bg-agro-600 text-white shadow-sm'
+                  ? 'bg-navy-900 text-white shadow-card'
                   : 'bg-white text-slate-600 hover:text-slate-900 border border-slate-200'
               }`}
             >
@@ -296,7 +296,7 @@ export default function DataImportPage() {
               onClick={() => { setDocType('E_FAKTURA'); }}
               className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-2 ${
                 docType === 'E_FAKTURA'
-                  ? 'bg-agro-600 text-white shadow-sm'
+                  ? 'bg-navy-900 text-white shadow-card'
                   : 'bg-white text-slate-600 hover:text-slate-900 border border-slate-200'
               }`}
             >
@@ -306,7 +306,7 @@ export default function DataImportPage() {
           </div>
 
           <div className="p-8">
-            <div className="border-2 border-dashed border-slate-300 hover:border-agro-500 rounded-2xl p-8 sm:p-12 text-center bg-slate-50/50 transition">
+            <div className="border-2 border-dashed border-slate-300 hover:border-agro-400 rounded-xl p-8 sm:p-12 text-center bg-slate-50/60 transition">
               <UploadCloud className="w-12 h-12 text-agro-600 mx-auto mb-3" />
               <h3 className="text-base font-bold text-slate-900">
                 {docType === 'BANK_STATEMENT' 
@@ -318,7 +318,7 @@ export default function DataImportPage() {
               </p>
 
               <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
-                <label className="px-4 py-2.5 bg-agro-600 hover:bg-agro-700 text-white rounded-xl text-xs font-semibold shadow-sm transition cursor-pointer inline-flex items-center space-x-1.5">
+                <label className="px-4 py-2.5 bg-agro-700 hover:bg-agro-800 text-white rounded-xl text-xs font-semibold shadow-card transition cursor-pointer inline-flex items-center space-x-1.5">
                   <UploadCloud className="w-4 h-4" />
                   <span>Kompyuterdan Fayl Tanlash</span>
                   <input 
@@ -365,7 +365,7 @@ export default function DataImportPage() {
           <div className="space-y-6">
             
             {/* Ledger Invariant Alert */}
-            <div className={`p-5 rounded-2xl border ${
+            <div className={`p-5 rounded-xl border ${
               preview.document_type === 'E_FAKTURA'
                 ? 'bg-amber-50/80 border-amber-200 text-amber-900'
                 : 'bg-emerald-50/80 border-emerald-200 text-emerald-900'
@@ -386,7 +386,7 @@ export default function DataImportPage() {
             </div>
 
             {/* Column Mappings Bar */}
-            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+            <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-card">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center space-x-2">
                   <Layers className="w-4 h-4 text-agro-600" />
@@ -415,29 +415,29 @@ export default function DataImportPage() {
 
             {/* Summary Statistics Cards */}
             <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
-              <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+              <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-card">
                 <p className="text-[11px] font-semibold text-slate-500">Jami Qatorlar</p>
                 <p className="text-xl font-bold text-slate-900 mt-1">{preview.total_rows}</p>
               </div>
-              <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+              <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-card">
                 <p className="text-[11px] font-semibold text-emerald-600">Yaroqli Qatorlar</p>
                 <p className="text-xl font-bold text-emerald-700 mt-1">{preview.valid_rows}</p>
               </div>
-              <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+              <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-card">
                 <p className="text-[11px] font-semibold text-amber-600">Ogohlantirish</p>
                 <p className="text-xl font-bold text-amber-700 mt-1">{preview.warning_rows}</p>
               </div>
-              <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+              <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-card">
                 <p className="text-[11px] font-semibold text-rose-600">Xatoliklar</p>
                 <p className="text-xl font-bold text-rose-700 mt-1">{preview.error_rows}</p>
               </div>
-              <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+              <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-card">
                 <p className="text-[11px] font-semibold text-slate-500">Kutilayotgan Kirim</p>
                 <p className="text-sm font-mono font-bold text-emerald-700 mt-1">
                   +{Number(preview.total_inflow).toLocaleString()} so&apos;m
                 </p>
               </div>
-              <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+              <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-card">
                 <p className="text-[11px] font-semibold text-slate-500">Kutilayotgan Chiqim</p>
                 <p className="text-sm font-mono font-bold text-rose-700 mt-1">
                   -{Number(preview.total_outflow).toLocaleString()} so&apos;m
@@ -446,7 +446,7 @@ export default function DataImportPage() {
             </div>
 
             {/* Table & Inline Review */}
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div className="bg-white rounded-xl border border-slate-200 shadow-card overflow-hidden">
               <div className="p-4 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                 <div className="flex items-center space-x-2">
                   <span className="text-xs font-bold text-slate-700">Filtr:</span>
@@ -468,7 +468,7 @@ export default function DataImportPage() {
                 <button
                   onClick={handleCommitBatch}
                   disabled={loading || preview.valid_rows === 0}
-                  className="px-5 py-2.5 bg-agro-600 hover:bg-agro-700 disabled:opacity-50 text-white rounded-xl text-xs font-bold shadow-sm transition inline-flex items-center space-x-1.5"
+                  className="px-5 py-2.5 bg-agro-700 hover:bg-agro-800 disabled:opacity-50 text-white rounded-xl text-xs font-bold shadow-card transition inline-flex items-center space-x-1.5"
                 >
                   <Check className="w-4 h-4" />
                   <span>Bazaga Kiritish va Tasdiqlash ({preview.valid_rows} ta qator)</span>
@@ -584,7 +584,7 @@ export default function DataImportPage() {
 
         {/* Commit Result Success Card */}
         {commitResult && (
-          <div className="bg-emerald-50 border border-emerald-200 p-6 rounded-2xl shadow-sm text-emerald-950 space-y-3">
+          <div className="bg-agro-50 border border-agro-200 p-6 rounded-xl shadow-card text-agro-950 space-y-3">
             <div className="flex items-center space-x-2">
               <CheckCircle2 className="w-6 h-6 text-emerald-600" />
               <h3 className="text-base font-bold text-emerald-900">
@@ -622,7 +622,7 @@ export default function DataImportPage() {
             <div className="pt-2 flex items-center space-x-3">
               <Link
                 href="/dashboard"
-                className="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold inline-flex items-center space-x-1.5 shadow-sm"
+                className="px-4 py-2 bg-agro-700 hover:bg-agro-800 text-white rounded-xl text-xs font-bold inline-flex items-center space-x-1.5 shadow-card"
               >
                 <span>Dashboardda Ko&apos;rish</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -632,7 +632,7 @@ export default function DataImportPage() {
         )}
 
         {/* Stage 5: Import History Audit */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div className="bg-white rounded-xl border border-slate-200 shadow-card overflow-hidden">
           <div className="p-5 border-b border-slate-100 flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <FileCheck className="w-5 h-5 text-agro-600" />

@@ -218,22 +218,22 @@ export default function CollateralSubsidiesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 py-8 px-4 sm:px-6 lg:px-8">
+    <div className="page-shell py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header Section */}
-        <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200">
+        <div className="bg-white rounded-xl p-6 sm:p-8 shadow-card border border-slate-200/80">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <span className="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 flex items-center gap-1.5">
+                <span className="px-3 py-1 rounded-full text-xs font-semibold bg-agro-100 text-agro-800 flex items-center gap-1.5">
                   <Landmark className="w-3.5 h-3.5" />
-                  ASSIGNMENT 6 • YURIDIK VA MOLIYAVIY MODUL
+                  GAROV VA SUBSIDIYALAR HUQUQIY-MOLIYAVIY MODULI
                 </span>
                 <span className="px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
                   VMQ-613 • PQ-47 • PF-82
                 </span>
               </div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
+              <h1 className="text-2xl sm:text-3xl font-bold text-navy-950 tracking-tight">
                 Qishloq Xo'jaligi Garov & Subsidiya Intellekti
               </h1>
               <p className="mt-1 text-sm text-slate-600 max-w-3xl">
@@ -250,7 +250,7 @@ export default function CollateralSubsidiesPage() {
               <select
                 value={selectedOrgId}
                 onChange={(e) => setSelectedOrgId(e.target.value)}
-                className="bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-agro-500"
               >
                 <option value="scenario-small-farmer">Andijon Baraka Fermer (65 ga)</option>
                 <option value="scenario-exporter">Samarqand Bog'dorchilik Agrofirmasi (120 ga)</option>
@@ -279,7 +279,7 @@ export default function CollateralSubsidiesPage() {
               onClick={() => setActiveTab('collateral')}
               className={`pb-4 text-sm font-semibold flex items-center gap-2 border-b-2 transition-colors ${
                 activeTab === 'collateral'
-                  ? 'border-emerald-600 text-emerald-600'
+                  ? 'border-agro-700 text-agro-700'
                   : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'
               }`}
             >
@@ -291,7 +291,7 @@ export default function CollateralSubsidiesPage() {
               onClick={() => setActiveTab('subsidies')}
               className={`pb-4 text-sm font-semibold flex items-center gap-2 border-b-2 transition-colors ${
                 activeTab === 'subsidies'
-                  ? 'border-emerald-600 text-emerald-600'
+                  ? 'border-agro-700 text-agro-700'
                   : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'
               }`}
             >
@@ -303,7 +303,7 @@ export default function CollateralSubsidiesPage() {
               onClick={() => setActiveTab('regulatory')}
               className={`pb-4 text-sm font-semibold flex items-center gap-2 border-b-2 transition-colors ${
                 activeTab === 'regulatory'
-                  ? 'border-emerald-600 text-emerald-600'
+                  ? 'border-agro-700 text-agro-700'
                   : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'
               }`}
             >
@@ -315,8 +315,8 @@ export default function CollateralSubsidiesPage() {
 
         {/* Loading / Error States */}
         {loading && (
-          <div className="bg-white rounded-2xl p-12 text-center border border-slate-200">
-            <RefreshCw className="w-8 h-8 animate-spin text-emerald-600 mx-auto mb-3" />
+          <div className="bg-white rounded-xl p-12 text-center border border-slate-200">
+            <RefreshCw className="w-8 h-8 animate-spin text-agro-700 mx-auto mb-3" />
             <p className="text-sm font-medium text-slate-600">
               Qonunchilik mezonlari va moliyaviy modellar hisoblanmoqda...
             </p>
@@ -324,7 +324,7 @@ export default function CollateralSubsidiesPage() {
         )}
 
         {error && (
-          <div className="bg-rose-50 border border-rose-200 p-6 rounded-2xl text-rose-900 text-sm flex items-center gap-3">
+          <div className="bg-rose-50 border border-rose-200 p-6 rounded-xl text-rose-900 text-sm flex items-center gap-3">
             <XCircle className="w-6 h-6 text-rose-600 flex-shrink-0" />
             <div>
               <span className="font-bold">Xatolik:</span> {error}
@@ -336,11 +336,11 @@ export default function CollateralSubsidiesPage() {
           <div className="space-y-6">
             {/* Top Cards: Legal Eligibility & Readiness */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+              <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-card">
                 <span className="text-xs font-semibold text-slate-500 uppercase">VMQ-613 Huquqiy Holati</span>
                 <div className="mt-2 flex items-center gap-2">
                   {screeningResult.is_eligible ? (
-                    <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                    <CheckCircle2 className="w-5 h-5 text-agro-700" />
                   ) : (
                     <XCircle className="w-5 h-5 text-rose-600" />
                   )}
@@ -353,7 +353,7 @@ export default function CollateralSubsidiesPage() {
                 </p>
               </div>
 
-              <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+              <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-card">
                 <span className="text-xs font-semibold text-slate-500 uppercase">Indikativ Bozor Qiymati (DCF)</span>
                 <div className="mt-2 text-xl font-bold text-slate-900">
                   {formatUZS(valuationResult.indicative_market_value_uzs)}
@@ -363,7 +363,7 @@ export default function CollateralSubsidiesPage() {
                 </p>
               </div>
 
-              <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+              <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-card">
                 <span className="text-xs font-semibold text-slate-500 uppercase">Maksimal Garov Ta'minoti (LTV)</span>
                 <div className="mt-2 text-xl font-bold text-emerald-700">
                   {formatUZS(valuationResult.max_pledge_value_uzs)}
@@ -373,7 +373,7 @@ export default function CollateralSubsidiesPage() {
                 </p>
               </div>
 
-              <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+              <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-card">
                 <span className="text-xs font-semibold text-slate-500 uppercase">Hujjatlar Tayyorgarligi</span>
                 <div className="mt-2 text-xl font-bold text-blue-700">
                   {checklist.readiness_percentage}%
@@ -385,9 +385,9 @@ export default function CollateralSubsidiesPage() {
             </div>
 
             {/* Section 1: VMQ-613 Statutory Screening Rule Checks */}
-            <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+            <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-card">
               <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                <ShieldCheck className="w-5 h-5 text-emerald-600" />
+                <ShieldCheck className="w-5 h-5 text-agro-700" />
                 VMQ-613 Me'yoriy Talablar Screeningi (O'tkazilgan Tekshiruvlar)
               </h2>
               <p className="text-xs text-slate-500 mt-1">
@@ -440,9 +440,9 @@ export default function CollateralSubsidiesPage() {
             {/* Section 2: Indicative DCF Valuation & Multi-Scenario Sensitivity */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* DCF Valuation Parameters */}
-              <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
+              <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-card space-y-4">
                 <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5 text-emerald-600" />
+                  <TrendingUp className="w-5 h-5 text-agro-700" />
                   Indikativ DCF Baholash Modeli Parametrlari
                 </h3>
                 <p className="text-xs text-slate-500 leading-relaxed">
@@ -494,7 +494,7 @@ export default function CollateralSubsidiesPage() {
               </div>
 
               {/* Multi-scenario Sensitivity Recalculation */}
-              <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
+              <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-card space-y-4">
                 <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
                   <Layers className="w-5 h-5 text-blue-600" />
                   Ko'p Ssenariyli Sezgirlik Tahlili (Haqiqiy Qayta Hisob)
@@ -556,11 +556,11 @@ export default function CollateralSubsidiesPage() {
             </div>
 
             {/* Section 3: Document Preparation Checklist */}
-            <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+            <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-card">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4">
                 <div>
                   <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                    <CheckSquare className="w-5 h-5 text-emerald-600" />
+                    <CheckSquare className="w-5 h-5 text-agro-700" />
                     Garov Hujjatlarini Tayyorlash Nazorat Ro'yxati (9 ta Me'yoriy Hujjat)
                   </h2>
                   <p className="text-xs text-slate-500 mt-0.5">
@@ -607,7 +607,7 @@ export default function CollateralSubsidiesPage() {
           <div className="space-y-6">
             {/* Top Cards: Subsidies Overview */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+              <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-card">
                 <span className="text-xs font-semibold text-slate-500 uppercase">Potentsial Subsidiya Imkoniyati</span>
                 <div className="mt-2 text-xl font-bold text-emerald-700">
                   {formatUZS(subsidyImpact.total_potential_subsidy_uzs)}
@@ -617,7 +617,7 @@ export default function CollateralSubsidiesPage() {
                 </p>
               </div>
 
-              <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+              <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-card">
                 <span className="text-xs font-semibold text-slate-500 uppercase">1-Bosqich (Dastlabki To'lov 50%)</span>
                 <div className="mt-2 text-xl font-bold text-blue-700">
                   {formatUZS(subsidyImpact.immediate_cash_inflow_potential_uzs)}
@@ -627,7 +627,7 @@ export default function CollateralSubsidiesPage() {
                 </p>
               </div>
 
-              <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+              <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-card">
                 <span className="text-xs font-semibold text-slate-500 uppercase">2-Bosqich (Mavsumiy Shartli 50%)</span>
                 <div className="mt-2 text-xl font-bold text-indigo-700">
                   {formatUZS(subsidyImpact.conditional_future_inflow_uzs)}
@@ -637,7 +637,7 @@ export default function CollateralSubsidiesPage() {
                 </p>
               </div>
 
-              <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+              <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-card">
                 <span className="text-xs font-semibold text-slate-500 uppercase">PF-82 Foiz Imtiyozi</span>
                 <div className="mt-2 text-xl font-bold text-amber-700">
                   10 foiz bandi
@@ -651,7 +651,7 @@ export default function CollateralSubsidiesPage() {
             {/* Interactive Calculators Section */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* PQ-47 Water Saving Calculator */}
-              <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
+              <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-card space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
                     <Droplets className="w-5 h-5 text-blue-600" />
@@ -737,10 +737,10 @@ export default function CollateralSubsidiesPage() {
               </div>
 
               {/* PF-82 Cotton & Wheat Financial Support Calculator */}
-              <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
+              <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-card space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                    <Percent className="w-5 h-5 text-emerald-600" />
+                    <Percent className="w-5 h-5 text-agro-700" />
                     PF-82: Paxta & G'alla Foiz Kompensatsiyasi
                   </h3>
                   <span className="text-xs font-semibold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">
@@ -811,7 +811,7 @@ export default function CollateralSubsidiesPage() {
 
                 <button
                   onClick={handleRecalculatePF82}
-                  className="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-colors"
+                  className="w-full py-2 bg-agro-700 hover:bg-agro-800 text-white rounded-lg text-xs font-bold transition-colors"
                 >
                   PF-82 Kompensatsiyasini Qayta Hisoblash
                 </button>
@@ -849,9 +849,9 @@ export default function CollateralSubsidiesPage() {
             </div>
 
             {/* Section: Matched Programs Table */}
-            <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+            <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-card">
               <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                <Coins className="w-5 h-5 text-emerald-600" />
+                <Coins className="w-5 h-5 text-agro-700" />
                 Davlat Subsidiyalari Dasturlari Ro'yxati & Moslik Tahlili
               </h2>
               <p className="text-xs text-slate-500 mt-1">
@@ -906,7 +906,7 @@ export default function CollateralSubsidiesPage() {
             </div>
 
             {/* Financial Impact Synthesis Card */}
-            <div className="p-6 rounded-2xl bg-slate-900 text-white space-y-3">
+            <div className="p-6 rounded-xl bg-navy-950 text-white space-y-3">
               <h3 className="text-base font-bold flex items-center gap-2 text-emerald-400">
                 <Sparkles className="w-5 h-5 text-emerald-400" />
                 Moliyaviy Dvigatel Bilan Integratsiya & Kassa Ta'siri
@@ -920,9 +920,9 @@ export default function CollateralSubsidiesPage() {
         {/* Tab C: Regulatory Registry */}
         {!loading && !error && activeTab === 'regulatory' && (
           <div className="space-y-6">
-            <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+            <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-card">
               <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                <FileText className="w-5 h-5 text-emerald-600" />
+                <FileText className="w-5 h-5 text-agro-700" />
                 O'zbekiston Respublikasi Rasmiy Qonunchilik Manbalari Reestri
               </h2>
               <p className="text-xs text-slate-500 mt-1">
@@ -949,7 +949,7 @@ export default function CollateralSubsidiesPage() {
                         href={source.official_lex_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-slate-300 text-blue-600 hover:text-blue-800 hover:border-blue-300 text-xs font-semibold shadow-sm transition-colors"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-slate-300 text-blue-600 hover:text-blue-800 hover:border-blue-300 text-xs font-semibold shadow-card transition-colors"
                       >
                         <span>Lex.uz da ko'rish</span>
                         <ExternalLink className="w-3.5 h-3.5" />

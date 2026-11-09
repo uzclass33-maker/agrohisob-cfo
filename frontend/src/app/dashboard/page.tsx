@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, useTransition, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { 
   fetchScenarios,
   fetchDashboardOverview,
@@ -32,7 +33,7 @@ import {
   ArrowUpRight, ArrowDownRight, RefreshCw, Sliders, ShieldCheck, 
   DollarSign, Calendar, AlertOctagon, TrendingUp, TrendingDown, Info,
   BrainCircuit, Sparkles, ShieldAlert, Cpu, BarChart3, Layers, 
-  FileText, ArrowRight, Gauge, Activity, Database
+  FileText, ArrowRight, Gauge, Activity, Database, Lock
 } from 'lucide-react';
 
 type TabType = 'overview' | 'cashflow' | 'forecast' | 'debt' | 'risks' | 'scenarios' | 'ai_cfo';
@@ -68,6 +69,8 @@ function DashboardContent() {
   // Status & Loading
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [errorType, setErrorType] = useState<'AUTH_REQUIRED' | 'FORBIDDEN' | 'NETWORK_COLD_START' | 'GENERIC' | null>(null);
+  const [coldStartNotice, setColdStartNotice] = useState<boolean>(false);
   const [llmRequested, setLlmRequested] = useState<boolean>(false);
   const [llmLoading, setLlmLoading] = useState<boolean>(false);
 
@@ -97,9 +100,16 @@ function DashboardContent() {
 
   // Main Data Fetcher
   const loadDashboardData = async (orgId: string) => {
+    let coldTimer: NodeJS.Timeout | null = null;
     try {
       setLoading(true);
       setError(null);
+      setErrorType(null);
+      setColdStartNotice(false);
+
+      coldTimer = setTimeout(() => {
+        setColdStartNotice(true);
+      }, 3000);
 
       const [ovRes, cfRes, fcRes, dbRes, rkRes, aiRes] = await Promise.all([
         fetchDashboardOverview(orgId),
@@ -135,8 +145,25 @@ function DashboardContent() {
 
     } catch (err: any) {
       console.error("Dashboard data load error:", err);
-      setError(err.message || "Boshqaruv paneli ma'lumotlarini yuklashda xatolik yuz berdi.");
+      const isAuth = err?.isAuthError || err?.status === 401 || err?.message?.includes("Autentifikatsiya") || err?.message?.includes("401");
+      const isForbid = err?.isForbidden || err?.status === 403 || err?.message?.includes("Tashkilotlararo") || err?.message?.includes("403");
+      const isNet = err?.message?.includes("fetch") || err?.message?.includes("NetworkError") || err?.message?.includes("Failed to fetch") || err?.message?.includes("aborted");
+
+      if (isAuth) {
+        setErrorType('AUTH_REQUIRED');
+        setError("Tizimga kirish talab etiladi: Ushbu tashkilot ma'lumotlarini ko'rish uchun avtorizatsiyadan o'ting yoki demo rejimiga o'ting.");
+      } else if (isForbid) {
+        setErrorType('FORBIDDEN');
+        setError(err.detail || err.message || "Tashkilotlararo ruxsat cheklangan (403): Ushbu korxona ma'lumotlariga faqat vakolatli xodimlar kira oladi.");
+      } else if (isNet) {
+        setErrorType('NETWORK_COLD_START');
+        setError("Server bilan aloqa o'rnatilmadi: Render bepul serveri uyg'onish holatida bo'lishi mumkin. Iltimos, qayta yuklang.");
+      } else {
+        setErrorType('GENERIC');
+        setError(err.detail || err.message || "Boshqaruv paneli ma'lumotlarini yuklashda kutilmagan xatolik yuz berdi.");
+      }
     } finally {
+      if (coldTimer) clearTimeout(coldTimer);
       setLoading(false);
     }
   };
@@ -274,13 +301,13 @@ function DashboardContent() {
   };
 
   return (
-    <div className="py-8 bg-slate-50 min-h-screen">
+    <div className="py-6 lg:py-8 bg-canvas min-h-screen">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
         
         {/* Top Control Bar: Organization Switcher & Meta */}
-        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-card flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center space-x-3">
-            <div className="p-2.5 bg-emerald-50 text-emerald-700 rounded-xl border border-emerald-100">
+            <div className="p-2.5 bg-agro-50 text-agro-700 rounded-lg border border-agro-100">
               <Building2 className="w-6 h-6" />
             </div>
             <div>
@@ -289,8 +316,8 @@ function DashboardContent() {
                 {overview && (
                   <span className={`px-2 py-0.5 rounded text-[11px] font-semibold border ${
                     overview.data_source === 'BANK_STATEMENT_IMPORT' 
-                      ? 'bg-purple-50 text-purple-700 border-purple-200' 
-                      : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                      ? 'bg-navy-50 text-navy-700 border-navy-200' 
+                      : 'bg-agro-50 text-agro-700 border-agro-200'
                   }`}>
                     {overview.data_source === 'BANK_STATEMENT_IMPORT' ? 'Bank Ko\'chirmasi (Haqiqiy)' : 'Sintetik Benchmark'}
                   </span>
@@ -308,8 +335,8 @@ function DashboardContent() {
               onClick={() => handleOrgChange('scenario-small-farmer')}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                 selectedOrgId.includes('farmer')
-                  ? 'bg-white text-slate-900 shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-navy-900 text-white shadow-card'
+                  : 'text-slate-600 hover:text-navy-900'
               }`}
             >
               Fermer (65 ga)
@@ -318,8 +345,8 @@ function DashboardContent() {
               onClick={() => handleOrgChange('scenario-exporter')}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                 selectedOrgId.includes('exporter')
-                  ? 'bg-white text-slate-900 shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-navy-900 text-white shadow-card'
+                  : 'text-slate-600 hover:text-navy-900'
               }`}
             >
               Eksportyor (120 ga)
@@ -328,8 +355,8 @@ function DashboardContent() {
               onClick={() => handleOrgChange('scenario-cluster')}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                 selectedOrgId.includes('cluster')
-                  ? 'bg-white text-slate-900 shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-navy-900 text-white shadow-card'
+                  : 'text-slate-600 hover:text-navy-900'
               }`}
             >
               Klaster (2 500 ga)
@@ -343,16 +370,16 @@ function DashboardContent() {
             <button
               onClick={() => loadDashboardData(selectedOrgId)}
               disabled={loading}
-              className="p-2 text-slate-600 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors border border-slate-200"
+              className="p-2 text-slate-600 hover:text-agro-700 hover:bg-agro-50 rounded-lg transition-colors border border-slate-200"
               title="Qayta hisoblash"
             >
-              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-emerald-600' : ''}`} />
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-agro-600' : ''}`} />
             </button>
           </div>
         </div>
 
         {/* 7-Module Navigation Tabs */}
-        <div className="bg-white rounded-xl border border-slate-200 p-1.5 shadow-sm overflow-x-auto">
+        <div className="bg-white rounded-xl border border-slate-200/80 p-1.5 shadow-card overflow-x-auto">
           <div className="flex items-center space-x-1 min-w-[760px]">
             {[
               { id: 'overview', label: '1. Ijroiya Xulosa', icon: Activity },
@@ -371,12 +398,10 @@ function DashboardContent() {
                   onClick={() => setActiveTab(tab.id as TabType)}
                   className={`flex items-center space-x-2 px-3.5 py-2.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ${
                     isActive
-                      ? tab.highlight 
-                        ? 'bg-purple-600 text-white shadow-sm' 
-                        : 'bg-emerald-600 text-white shadow-sm'
+                      ? 'bg-navy-900 text-white shadow-card'
                       : tab.highlight
-                        ? 'text-purple-700 hover:bg-purple-50'
-                        : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                        ? 'text-agro-800 hover:bg-agro-50'
+                        : 'text-slate-600 hover:bg-slate-100 hover:text-navy-900'
                   }`}
                 >
                   <Icon className="w-4 h-4" />
@@ -394,21 +419,144 @@ function DashboardContent() {
           </div>
         </div>
 
-        {/* Error Banner */}
-        {error && (
-          <div className="p-4 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl flex items-center space-x-3 text-sm">
-            <AlertOctagon className="w-5 h-5 flex-shrink-0 text-rose-600" />
-            <span>{error}</span>
+        {/* Synthetic Demo Mode Notice Banner */}
+        {selectedOrgId.startsWith('scenario-') && (
+          <div className="bg-agro-50 border border-agro-200 text-agro-900 px-4 py-3 rounded-xl flex items-center justify-between text-xs">
+            <div className="flex items-center space-x-2">
+              <Sparkles className="w-4 h-4 text-agro-700 flex-shrink-0" />
+              <span>
+                <strong>Sintetik Benchmark Rejimi:</strong> Siz hozir ochiq agrobiznes benchmark ssenariysini tahlil qilmoqdasiz. O'z korxonangiz soliq va bank fayllarini yuklash uchun{' '}
+                <Link href="/data-import" className="underline font-bold text-agro-800 hover:text-agro-950">
+                  Fayl Yuklash
+                </Link>{' '}
+                bo'limiga o'ting.
+              </span>
+            </div>
+            <span className="hidden md:inline px-2 py-0.5 rounded bg-agro-100 text-agro-800 font-semibold text-[10px]">
+              Ochiq Ko'rish Rejimi
+            </span>
           </div>
         )}
 
-        {/* Loading Overlay State */}
+        {/* Loading Overlay State with Render Cold Start Alert */}
         {loading && (
-          <div className="p-12 text-center bg-white rounded-2xl border border-slate-200 shadow-sm space-y-3">
-            <RefreshCw className="w-8 h-8 text-emerald-600 animate-spin mx-auto" />
-            <p className="text-sm font-semibold text-slate-700">
-              Moliyaviy hisob-kitoblar aniq hisoblanmoqda (Financial Engine v4.0.0)...
+          <div className="p-12 text-center bg-white rounded-xl border border-slate-200/80 shadow-card space-y-4">
+            <RefreshCw className="w-10 h-10 text-agro-600 animate-spin mx-auto" />
+            <div className="space-y-1">
+              <p className="text-base font-bold text-slate-800">
+                Moliyaviy tahlil yuklanmoqda...
+              </p>
+              <p className="text-xs text-slate-500">
+                12 oylik kassa oqimlari, DSCR ko'rsatkichlari va kassa teshigi tahlili hisoblanmoqda
+              </p>
+            </div>
+            {coldStartNotice && (
+              <div className="max-w-md mx-auto p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs flex items-center space-x-2 text-left">
+                <Info className="w-5 h-5 text-amber-600 flex-shrink-0" />
+                <span>
+                  <strong>Server uyg'onmoqda:</strong> Bulutli backend (Render) faollashtirilmoqda, iltimos kuting. Birinchi so'rov 20-30 soniya olishi mumkin.
+                </span>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Error States */}
+        {!loading && error && (
+          <div>
+            {errorType === 'AUTH_REQUIRED' ? (
+              <div className="bg-white p-8 sm:p-12 rounded-xl border border-amber-200/80 shadow-card text-center max-w-xl mx-auto space-y-4">
+                <div className="w-14 h-14 bg-amber-100 text-amber-700 rounded-xl flex items-center justify-center mx-auto">
+                  <Lock className="w-7 h-7" />
+                </div>
+                <h3 className="num text-xl font-bold tracking-tight text-slate-900">Autentifikatsiya Talab Qilinadi</h3>
+                <p className="text-sm text-slate-600">
+                  Ushbu korxona (<span className="font-semibold text-slate-800">{selectedOrgId}</span>) ma'lumotlarini ko'rish uchun tizimga kiring yoki ochiq sintetik demo rejimiga o'ting.
+                </p>
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+                  <Link
+                    href={`/login?redirect=${encodeURIComponent(`/dashboard?scenario=${selectedOrgId}`)}`}
+                    className="w-full sm:w-auto inline-flex items-center justify-center px-5 py-2.5 rounded-xl bg-agro-700 hover:bg-agro-800 text-white font-semibold text-sm shadow transition"
+                  >
+                    <Lock className="w-4 h-4 mr-2" />
+                    Tizimga Kirish (Login)
+                  </Link>
+                  <button
+                    onClick={() => handleOrgChange('scenario-small-farmer')}
+                    className="w-full sm:w-auto inline-flex items-center justify-center px-5 py-2.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-sm transition"
+                  >
+                    Demo Korxonasini Ko'rish
+                  </button>
+                </div>
+              </div>
+            ) : errorType === 'FORBIDDEN' ? (
+              <div className="bg-white p-8 sm:p-12 rounded-xl border border-rose-200/80 shadow-card text-center max-w-xl mx-auto space-y-4">
+                <div className="w-14 h-14 bg-rose-100 text-rose-700 rounded-xl flex items-center justify-center mx-auto">
+                  <ShieldAlert className="w-7 h-7" />
+                </div>
+                <h3 className="num text-xl font-bold tracking-tight text-slate-900">Ruxsat Cheklangan (403 Forbidden)</h3>
+                <p className="text-sm text-slate-600">
+                  Sizning hisobingiz ushbu korxona (<span className="font-semibold text-slate-800">{selectedOrgId}</span>) moliyaviy ma'lumotlariga kirish huquqiga ega emas. Platformada tashkilotlararo ma'lumotlar xavfsizligi va tenant izolyatsiyasi to'liq ta'minlangan.
+                </p>
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+                  <button
+                    onClick={() => handleOrgChange('scenario-small-farmer')}
+                    className="w-full sm:w-auto inline-flex items-center justify-center px-5 py-2.5 rounded-xl bg-agro-700 hover:bg-agro-800 text-white font-semibold text-sm shadow transition"
+                  >
+                    Demo Korxonasiga Qaytish
+                  </button>
+                </div>
+              </div>
+            ) : errorType === 'NETWORK_COLD_START' ? (
+              <div className="bg-white p-8 sm:p-12 rounded-xl border border-sky-200/80 shadow-card text-center max-w-xl mx-auto space-y-4">
+                <div className="w-14 h-14 bg-sky-100 text-sky-700 rounded-xl flex items-center justify-center mx-auto">
+                  <RefreshCw className="w-7 h-7" />
+                </div>
+                <h3 className="num text-xl font-bold tracking-tight text-slate-900">Server Uyg'onmoqda yoki Aloqa Uzildi</h3>
+                <p className="text-sm text-slate-600">
+                  Render bepul bulutli serveri uzoq harakatsizlikdan so'ng 'uyqu' holatidan qaytmoqda yoki tarmoq sekinlashgan. Iltimos, quyidagi tugmani bosib qayta yuklang.
+                </p>
+                <div className="pt-2">
+                  <button
+                    onClick={() => loadDashboardData(selectedOrgId)}
+                    className="inline-flex items-center justify-center px-6 py-2.5 rounded-xl bg-agro-700 hover:bg-agro-800 text-white font-semibold text-sm shadow transition"
+                  >
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    Qayta Yuklash
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="p-4 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl flex items-center justify-between text-sm">
+                <div className="flex items-center space-x-3">
+                  <AlertOctagon className="w-5 h-5 flex-shrink-0 text-rose-600" />
+                  <span>{error}</span>
+                </div>
+                <button
+                  onClick={() => loadDashboardData(selectedOrgId)}
+                  className="px-3 py-1 bg-white border border-rose-300 rounded-lg text-xs font-semibold text-rose-700 hover:bg-rose-100 transition"
+                >
+                  Qayta urinish
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Empty State */}
+        {!loading && !error && !overview && (
+          <div className="p-12 text-center bg-white rounded-xl border border-slate-200/80 shadow-card space-y-3">
+            <Database className="w-10 h-10 text-slate-400 mx-auto" />
+            <h3 className="text-base font-bold text-slate-700">Ma'lumotlar topilmadi</h3>
+            <p className="text-xs text-slate-500 max-w-sm mx-auto">
+              Ushbu tashkilot uchun hozircha moliyaviy ma'lumotlar mavjud emas. Demo ssenariylaridan birini tanlang yoki yangi ma'lumot yuklang.
             </p>
+            <button
+              onClick={() => handleOrgChange('scenario-small-farmer')}
+              className="mt-2 inline-flex items-center px-4 py-2 bg-agro-600 text-white rounded-xl text-xs font-semibold hover:bg-agro-700 transition"
+            >
+              Demo ssenariyni ko'rish
+            </button>
           </div>
         )}
 
@@ -420,12 +568,12 @@ function DashboardContent() {
             {/* Top KPI Cards Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {/* Card 1: Total Inflow */}
-              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-2">
-                <div className="flex items-center justify-between text-slate-500 text-xs font-semibold">
+              <div className="bg-white p-5 rounded-xl border border-slate-200/80 shadow-card space-y-2">
+                <div className="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-slate-400">
                   <span>Yalpi Pul Tushumlari</span>
                   <ArrowUpRight className="w-4 h-4 text-emerald-500" />
                 </div>
-                <div className="text-2xl font-bold text-slate-900">
+                <div className="num text-[26px] font-bold tracking-tight text-slate-900">
                   {formatCompactUZS(overview.kpis.total_inflows)}
                 </div>
                 <div className="text-xs text-slate-500 flex items-center justify-between border-t border-slate-100 pt-2">
@@ -435,12 +583,12 @@ function DashboardContent() {
               </div>
 
               {/* Card 2: Total Outflow */}
-              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-2">
-                <div className="flex items-center justify-between text-slate-500 text-xs font-semibold">
+              <div className="bg-white p-5 rounded-xl border border-slate-200/80 shadow-card space-y-2">
+                <div className="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-slate-400">
                   <span>Jami Pul Chiqimlari</span>
                   <ArrowDownRight className="w-4 h-4 text-rose-500" />
                 </div>
-                <div className="text-2xl font-bold text-slate-900">
+                <div className="num text-[26px] font-bold tracking-tight text-slate-900">
                   {formatCompactUZS(overview.kpis.total_outflows)}
                 </div>
                 <div className="text-xs text-slate-500 flex items-center justify-between border-t border-slate-100 pt-2">
@@ -450,8 +598,8 @@ function DashboardContent() {
               </div>
 
               {/* Card 3: Net Cash Flow */}
-              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-2">
-                <div className="flex items-center justify-between text-slate-500 text-xs font-semibold">
+              <div className="bg-white p-5 rounded-xl border border-slate-200/80 shadow-card space-y-2">
+                <div className="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-slate-400">
                   <span>Sof Pul Oqimi (Net Cash)</span>
                   {overview.kpis.net_cash_flow >= 0 ? (
                     <TrendingUp className="w-4 h-4 text-emerald-500" />
@@ -459,7 +607,7 @@ function DashboardContent() {
                     <TrendingDown className="w-4 h-4 text-rose-500" />
                   )}
                 </div>
-                <div className={`text-2xl font-bold ${overview.kpis.net_cash_flow >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
+                <div className={`num text-[26px] font-bold tracking-tight ${overview.kpis.net_cash_flow >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
                   {formatCompactUZS(overview.kpis.net_cash_flow)}
                 </div>
                 <div className="text-xs text-slate-500 flex items-center justify-between border-t border-slate-100 pt-2">
@@ -469,12 +617,12 @@ function DashboardContent() {
               </div>
 
               {/* Card 4: DSCR Ratio */}
-              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-2">
-                <div className="flex items-center justify-between text-slate-500 text-xs font-semibold">
+              <div className="bg-white p-5 rounded-xl border border-slate-200/80 shadow-card space-y-2">
+                <div className="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-slate-400">
                   <span>DSCR Qoplash Nisbati</span>
                   <Gauge className="w-4 h-4 text-sky-500" />
                 </div>
-                <div className="text-2xl font-bold text-slate-900">
+                <div className="num text-[26px] font-bold tracking-tight text-slate-900">
                   {overview.kpis.dscr !== null ? `${overview.kpis.dscr.toFixed(2)}x` : "Qarzsiz"}
                 </div>
                 <div className="text-xs border-t border-slate-100 pt-2">
@@ -485,13 +633,13 @@ function DashboardContent() {
 
             {/* Secondary KPIs Row */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center space-x-3">
+              <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-card flex items-center space-x-3">
                 <div className="p-3 bg-amber-50 text-amber-600 rounded-xl">
                   <Calendar className="w-5 h-5" />
                 </div>
                 <div>
                   <div className="text-xs text-slate-500 font-semibold">Eng Past Kassa Nuqtasi</div>
-                  <div className="text-base font-bold text-slate-900">
+                  <div className="num text-base font-bold tracking-tight text-slate-900">
                     {formatUZS(overview.kpis.projected_min_balance)}
                   </div>
                   <div className="text-xs text-amber-700 font-medium">
@@ -500,13 +648,13 @@ function DashboardContent() {
                 </div>
               </div>
 
-              <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center space-x-3">
+              <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-card flex items-center space-x-3">
                 <div className="p-3 bg-rose-50 text-rose-600 rounded-xl">
                   <AlertOctagon className="w-5 h-5" />
                 </div>
                 <div>
                   <div className="text-xs text-slate-500 font-semibold">Taqchillik Oylari</div>
-                  <div className="text-base font-bold text-slate-900">
+                  <div className="num text-base font-bold tracking-tight text-slate-900">
                     {overview.kpis.months_in_deficit} oy
                   </div>
                   <div className="text-xs text-slate-500">
@@ -515,13 +663,13 @@ function DashboardContent() {
                 </div>
               </div>
 
-              <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center space-x-3">
-                <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
+              <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-card flex items-center space-x-3">
+                <div className="p-3 bg-agro-50 text-agro-700 rounded-lg">
                   <ShieldCheck className="w-5 h-5" />
                 </div>
                 <div>
                   <div className="text-xs text-slate-500 font-semibold">Hisoblash Dvigateli</div>
-                  <div className="text-base font-bold text-slate-900">
+                  <div className="num text-base font-bold tracking-tight text-slate-900">
                     Deterministik v{overview.calculation_version}
                   </div>
                   <div className="text-xs text-emerald-700 font-medium">
@@ -562,10 +710,10 @@ function DashboardContent() {
             {/* Category Distribution Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Inflows Breakdown */}
-              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+              <div className="bg-white p-5 rounded-xl border border-slate-200/80 shadow-card space-y-4">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                   <div className="flex items-center space-x-2">
-                    <ArrowUpRight className="w-5 h-5 text-emerald-600" />
+                    <ArrowUpRight className="w-5 h-5 text-agro-600" />
                     <h3 className="font-bold text-slate-900 text-sm">Tushumlar Toifasi Taqsimoti</h3>
                   </div>
                   <span className="text-xs font-bold text-emerald-700">
@@ -582,7 +730,7 @@ function DashboardContent() {
                           <span className="text-slate-900 font-bold">{formatUZS(amount)} ({pct.toFixed(1)}%)</span>
                         </div>
                         <div className="w-full bg-slate-100 rounded-full h-2">
-                          <div className="bg-emerald-500 h-2 rounded-full" style={{ width: `${pct}%` }}></div>
+                          <div className="h-2 origin-left animate-growBar rounded-full bg-emerald-600" style={{ width: `${pct}%` }}></div>
                         </div>
                       </div>
                     );
@@ -591,7 +739,7 @@ function DashboardContent() {
               </div>
 
               {/* Outflows Breakdown */}
-              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+              <div className="bg-white p-5 rounded-xl border border-slate-200/80 shadow-card space-y-4">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                   <div className="flex items-center space-x-2">
                     <ArrowDownRight className="w-5 h-5 text-rose-600" />
@@ -611,7 +759,7 @@ function DashboardContent() {
                           <span className="text-slate-900 font-bold">{formatUZS(amount)} ({pct.toFixed(1)}%)</span>
                         </div>
                         <div className="w-full bg-slate-100 rounded-full h-2">
-                          <div className="bg-rose-500 h-2 rounded-full" style={{ width: `${pct}%` }}></div>
+                          <div className="h-2 origin-left animate-growBar rounded-full bg-rose-500" style={{ width: `${pct}%` }}></div>
                         </div>
                       </div>
                     );
@@ -621,7 +769,7 @@ function DashboardContent() {
             </div>
 
             {/* Monthly Roll-Forward Detailed Table */}
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div className="bg-white rounded-xl border border-slate-200/80 shadow-card overflow-hidden">
               <div className="p-4 border-b border-slate-100 flex items-center justify-between">
                 <div>
                   <h3 className="text-sm font-bold text-slate-900">Oylik Kassa Oqimlari Tafsiloti (Roll-Forward Reconciliation)</h3>
@@ -693,7 +841,7 @@ function DashboardContent() {
             {/* Forecast Assumptions & Seasonal Summary Card */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Left 2 Cols: Assumptions Panel */}
-              <div className="lg:col-span-2 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+              <div className="lg:col-span-2 bg-white p-5 rounded-xl border border-slate-200/80 shadow-card space-y-4">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                   <div className="flex items-center space-x-2">
                     <Wheat className="w-5 h-5 text-amber-600" />
@@ -743,7 +891,7 @@ function DashboardContent() {
               </div>
 
               {/* Right Col: Seasonality KPI summary */}
-              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4 flex flex-col justify-between">
+              <div className="bg-white p-5 rounded-xl border border-slate-200/80 shadow-card space-y-4 flex flex-col justify-between">
                 <div>
                   <h3 className="text-sm font-bold text-slate-900 border-b border-slate-100 pb-3">
                     Prognoz Metrikalari
@@ -781,7 +929,7 @@ function DashboardContent() {
             </div>
 
             {/* Monthly Forecast Forecast Grid */}
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div className="bg-white rounded-xl border border-slate-200/80 shadow-card overflow-hidden">
               <div className="p-4 border-b border-slate-100">
                 <h3 className="text-sm font-bold text-slate-900">12 Oylik Prognoz Jadvali va CFADS Qoplash</h3>
                 <p className="text-xs text-slate-500">Oylik prognoz qilingan operatsion oqim, kredit xizmati va yakuniy kassa balansi</p>
@@ -849,33 +997,33 @@ function DashboardContent() {
           <div className="space-y-6">
             {/* Top Debt Summary Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-1">
+              <div className="bg-white p-5 rounded-xl border border-slate-200/80 shadow-card space-y-1">
                 <span className="text-xs text-slate-500 font-semibold">Jami Asosiy Qarz</span>
-                <div className="text-2xl font-bold text-slate-900">{formatCompactUZS(debt.total_principal)}</div>
+                <div className="num text-[26px] font-bold tracking-tight text-slate-900">{formatCompactUZS(debt.total_principal)}</div>
                 <div className="text-xs text-slate-500 pt-1 border-t border-slate-100">
                   Aniq: {formatUZS(debt.total_principal)}
                 </div>
               </div>
 
-              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-1">
+              <div className="bg-white p-5 rounded-xl border border-slate-200/80 shadow-card space-y-1">
                 <span className="text-xs text-slate-500 font-semibold">Yillik Foiz To'lovi</span>
-                <div className="text-2xl font-bold text-amber-700">{formatCompactUZS(debt.total_interest)}</div>
+                <div className="num text-[26px] font-bold tracking-tight text-amber-700">{formatCompactUZS(debt.total_interest)}</div>
                 <div className="text-xs text-slate-500 pt-1 border-t border-slate-100">
                   Hisoblangan foiz yuki
                 </div>
               </div>
 
-              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-1">
+              <div className="bg-white p-5 rounded-xl border border-slate-200/80 shadow-card space-y-1">
                 <span className="text-xs text-slate-500 font-semibold">Jami Yillik Qarz Xizmati</span>
-                <div className="text-2xl font-bold text-rose-700">{formatCompactUZS(debt.total_debt_service)}</div>
+                <div className="num text-[26px] font-bold tracking-tight text-rose-700">{formatCompactUZS(debt.total_debt_service)}</div>
                 <div className="text-xs text-slate-500 pt-1 border-t border-slate-100">
                   Asosiy qarz + Foiz
                 </div>
               </div>
 
-              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-1">
+              <div className="bg-white p-5 rounded-xl border border-slate-200/80 shadow-card space-y-1">
                 <span className="text-xs text-slate-500 font-semibold">Yillik DSCR Qoplash</span>
-                <div className="text-2xl font-bold text-slate-900">
+                <div className="num text-[26px] font-bold tracking-tight text-slate-900">
                   {debt.annual_dscr !== null ? `${debt.annual_dscr.toFixed(2)}x` : "Qarzsiz"}
                 </div>
                 <div className="text-xs pt-1 border-t border-slate-100">
@@ -885,7 +1033,7 @@ function DashboardContent() {
             </div>
 
             {/* DSCR Formula & Risk Benchmark Box */}
-            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+            <div className="bg-white p-5 rounded-xl border border-slate-200/80 shadow-card space-y-4">
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                 <div className="flex items-center space-x-2">
                   <Gauge className="w-5 h-5 text-sky-600" />
@@ -922,7 +1070,7 @@ function DashboardContent() {
             </div>
 
             {/* Active Loans Table */}
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div className="bg-white rounded-xl border border-slate-200/80 shadow-card overflow-hidden">
               <div className="p-4 border-b border-slate-100 flex items-center justify-between">
                 <div>
                   <h3 className="text-sm font-bold text-slate-900">Mavjud Kredit Shartnomalari va Garov Ta'minoti</h3>
@@ -973,34 +1121,34 @@ function DashboardContent() {
           <div className="space-y-6">
             {/* Risk Count Summary Cards */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <div className="bg-white p-4 rounded-xl border border-rose-200 shadow-sm flex items-center justify-between">
+              <div className="bg-white p-4 rounded-xl border border-rose-200/80 shadow-card flex items-center justify-between">
                 <div>
                   <span className="text-xs text-rose-600 font-bold">Kritik Xavflar</span>
-                  <div className="text-2xl font-extrabold text-rose-700">{risks.critical_count} ta</div>
+                  <div className="num text-2xl font-extrabold tracking-tight text-rose-700">{risks.critical_count} ta</div>
                 </div>
                 <AlertOctagon className="w-8 h-8 text-rose-500" />
               </div>
 
-              <div className="bg-white p-4 rounded-xl border border-orange-200 shadow-sm flex items-center justify-between">
+              <div className="bg-white p-4 rounded-xl border border-orange-200/80 shadow-card flex items-center justify-between">
                 <div>
                   <span className="text-xs text-orange-600 font-bold">Yuqori Xavflar</span>
-                  <div className="text-2xl font-extrabold text-orange-700">{risks.high_count} ta</div>
+                  <div className="num text-2xl font-extrabold tracking-tight text-orange-700">{risks.high_count} ta</div>
                 </div>
                 <AlertTriangle className="w-8 h-8 text-orange-500" />
               </div>
 
-              <div className="bg-white p-4 rounded-xl border border-amber-200 shadow-sm flex items-center justify-between">
+              <div className="bg-white p-4 rounded-xl border border-amber-200/80 shadow-card flex items-center justify-between">
                 <div>
                   <span className="text-xs text-amber-600 font-bold">O'rta Xavflar</span>
-                  <div className="text-2xl font-extrabold text-amber-700">{risks.medium_count} ta</div>
+                  <div className="num text-2xl font-extrabold tracking-tight text-amber-700">{risks.medium_count} ta</div>
                 </div>
                 <Info className="w-8 h-8 text-amber-500" />
               </div>
 
-              <div className="bg-white p-4 rounded-xl border border-blue-200 shadow-sm flex items-center justify-between">
+              <div className="bg-white p-4 rounded-xl border border-blue-200/80 shadow-card flex items-center justify-between">
                 <div>
                   <span className="text-xs text-blue-600 font-bold">Jami Xavflar</span>
-                  <div className="text-2xl font-extrabold text-slate-800">{risks.risks_count} ta</div>
+                  <div className="num text-2xl font-extrabold tracking-tight text-slate-800">{risks.risks_count} ta</div>
                 </div>
                 <ShieldCheck className="w-8 h-8 text-blue-500" />
               </div>
@@ -1011,7 +1159,7 @@ function DashboardContent() {
               {risks.risks.map((risk) => (
                 <div 
                   key={risk.id} 
-                  className={`bg-white p-5 rounded-2xl border shadow-sm space-y-3 ${
+                  className={`bg-white p-5 rounded-xl border shadow-card space-y-3 ${
                     risk.severity === 'CRITICAL' ? 'border-rose-300 bg-rose-50/20' :
                     risk.severity === 'HIGH' ? 'border-orange-300 bg-orange-50/20' :
                     'border-slate-200'
@@ -1051,7 +1199,7 @@ function DashboardContent() {
 
                     <div className="p-3 bg-emerald-50/80 border border-emerald-200 rounded-xl space-y-1">
                       <span className="text-emerald-800 font-bold flex items-center space-x-1">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                        <CheckCircle2 className="w-4 h-4 text-agro-600" />
                         <span>Tavsiya etilayotgan Boshqaruv Chorasi:</span>
                       </span>
                       <p className="text-emerald-900 leading-relaxed">
@@ -1071,11 +1219,11 @@ function DashboardContent() {
         {!loading && activeTab === 'scenarios' && (
           <div className="space-y-6">
             {/* Header & Controls Panel */}
-            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+            <div className="bg-white p-6 rounded-xl border border-slate-200/80 shadow-card space-y-6">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
                 <div>
-                  <h3 className="text-base font-bold text-slate-900 flex items-center space-x-2">
-                    <Sliders className="w-5 h-5 text-emerald-600" />
+                  <h3 className="num text-base font-bold tracking-tight text-slate-900 flex items-center space-x-2">
+                    <Sliders className="w-5 h-5 text-agro-600" />
                     <span>Interaktiv Ssenariylar va Sezgirlik Tahlili</span>
                   </h3>
                   <p className="text-xs text-slate-500">
@@ -1088,7 +1236,7 @@ function DashboardContent() {
                   <button
                     onClick={() => handleApplyPreset('BASE')}
                     className={`px-3 py-1.5 rounded-lg font-bold transition-all ${
-                      scenarioPreset === 'BASE' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600'
+                      scenarioPreset === 'BASE' ? 'bg-white text-navy-900 shadow-card' : 'text-slate-600'
                     }`}
                   >
                     Baza (0%)
@@ -1096,7 +1244,7 @@ function DashboardContent() {
                   <button
                     onClick={() => handleApplyPreset('OPTIMISTIC')}
                     className={`px-3 py-1.5 rounded-lg font-bold transition-all ${
-                      scenarioPreset === 'OPTIMISTIC' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-600'
+                      scenarioPreset === 'OPTIMISTIC' ? 'bg-agro-700 text-white shadow-card' : 'text-slate-600'
                     }`}
                   >
                     Optimistik (+20%/-10%)
@@ -1104,7 +1252,7 @@ function DashboardContent() {
                   <button
                     onClick={() => handleApplyPreset('PESSIMISTIC')}
                     className={`px-3 py-1.5 rounded-lg font-bold transition-all ${
-                      scenarioPreset === 'PESSIMISTIC' ? 'bg-rose-600 text-white shadow-sm' : 'text-slate-600'
+                      scenarioPreset === 'PESSIMISTIC' ? 'bg-rose-600 text-white shadow-card' : 'text-slate-600'
                     }`}
                   >
                     Pessimistik (-20%/+15%)
@@ -1233,9 +1381,9 @@ function DashboardContent() {
               <div className="space-y-6">
                 {/* Variance Metrics */}
                 <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-                  <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-1">
+                  <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-card space-y-1">
                     <span className="text-xs text-slate-500 font-semibold">Sof Pul Oqimi Farqi</span>
-                    <div className={`text-xl font-bold ${simulationResult.variance_net_cash_flow >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
+                    <div className={`num text-xl font-bold tracking-tight ${simulationResult.variance_net_cash_flow >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
                       {simulationResult.variance_net_cash_flow >= 0 ? '+' : ''}
                       {formatCompactUZS(simulationResult.variance_net_cash_flow)}
                     </div>
@@ -1244,9 +1392,9 @@ function DashboardContent() {
                     </div>
                   </div>
 
-                  <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-1">
+                  <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-card space-y-1">
                     <span className="text-xs text-slate-500 font-semibold">Yakuniy Kassa Farqi</span>
-                    <div className={`text-xl font-bold ${simulationResult.variance_closing_balance >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
+                    <div className={`num text-xl font-bold tracking-tight ${simulationResult.variance_closing_balance >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
                       {simulationResult.variance_closing_balance >= 0 ? '+' : ''}
                       {formatCompactUZS(simulationResult.variance_closing_balance)}
                     </div>
@@ -1255,9 +1403,9 @@ function DashboardContent() {
                     </div>
                   </div>
 
-                  <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-1">
+                  <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-card space-y-1">
                     <span className="text-xs text-slate-500 font-semibold">DSCR Farqi</span>
-                    <div className={`text-xl font-bold ${(simulationResult.variance_dscr || 0) >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
+                    <div className={`num text-xl font-bold tracking-tight ${(simulationResult.variance_dscr || 0) >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
                       {simulationResult.variance_dscr !== null ? `${simulationResult.variance_dscr >= 0 ? '+' : ''}${simulationResult.variance_dscr.toFixed(2)}x` : '—'}
                     </div>
                     <div className="text-[11px] text-slate-500">
@@ -1265,9 +1413,9 @@ function DashboardContent() {
                     </div>
                   </div>
 
-                  <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-1">
+                  <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-card space-y-1">
                     <span className="text-xs text-slate-500 font-semibold">To'lov Qobiliyati Xulosasi</span>
-                    <div className="text-base font-bold text-slate-900 truncate">
+                    <div className="num text-base font-bold tracking-tight text-slate-900 truncate">
                       {simulationResult.solvency_impact}
                     </div>
                     <div className="text-[11px] text-slate-500">
@@ -1305,17 +1453,19 @@ function DashboardContent() {
         {!loading && activeTab === 'ai_cfo' && aiInsights && (
           <div className="space-y-6">
             {/* Executive Health Summary Card */}
-            <div className="bg-gradient-to-r from-purple-900 via-indigo-900 to-slate-900 text-white p-6 rounded-2xl shadow-xl space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-purple-800/80 pb-4">
+            <div className="relative overflow-hidden rounded-xl border border-navy-800 bg-navy-950 p-6 text-white shadow-card">
+              <div className="bg-grid-light mask-fade-b pointer-events-none absolute inset-0" aria-hidden="true" />
+              <div className="relative space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-navy-800 pb-4">
                 <div className="flex items-center space-x-3">
-                  <div className="p-2.5 bg-purple-500/20 rounded-xl border border-purple-400/30">
-                    <BrainCircuit className="w-6 h-6 text-purple-300" />
+                  <div className="p-2.5 bg-agro-500/15 rounded-lg border border-agro-400/20">
+                    <BrainCircuit className="w-6 h-6 text-harvest-300" />
                   </div>
                   <div>
-                    <span className="text-xs font-semibold text-purple-300 uppercase tracking-wider">
+                    <span className="text-xs font-semibold text-harvest-300 uppercase tracking-wider">
                       AI-CFO Moliyaviy Salomatlik Tahlili
                     </span>
-                    <h3 className="text-lg font-bold text-white">
+                    <h3 className="text-lg font-bold tracking-tight text-white">
                       Strategik Intellekt & Boshqaruv Xulosasi
                     </h3>
                   </div>
@@ -1325,10 +1475,10 @@ function DashboardContent() {
                 <button
                   onClick={handleToggleLLM}
                   disabled={llmLoading}
-                  className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold transition-all border ${
+                  className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-xs font-bold transition-all border ${
                     aiInsights.is_llm_used
-                      ? 'bg-purple-500 text-white border-purple-400 shadow-lg'
-                      : 'bg-white/10 text-purple-200 border-white/20 hover:bg-white/20'
+                      ? 'bg-agro-600 text-white border-agro-500 shadow-md'
+                      : 'bg-white/10 text-slate-200 border-white/20 hover:bg-white/20'
                   }`}
                 >
                   <Sparkles className={`w-4 h-4 ${llmLoading ? 'animate-spin' : ''}`} />
@@ -1337,32 +1487,33 @@ function DashboardContent() {
               </div>
 
               {/* Health Summary Text */}
-              <p className="text-sm text-purple-100 leading-relaxed">
+              <p className="text-sm text-slate-200 leading-relaxed">
                 {aiInsights.financial_health_summary_uz}
               </p>
 
               {/* Key Findings Bullets */}
               <div className="space-y-2 pt-2">
-                <span className="text-xs font-bold uppercase tracking-wider text-purple-300">
+                <span className="text-xs font-bold uppercase tracking-wider text-harvest-300">
                   Asosiy Strategik Xulosalar:
                 </span>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
                   {aiInsights.key_findings_uz.map((finding, idx) => (
                     <div key={idx} className="flex items-start space-x-2 bg-white/5 p-2.5 rounded-lg border border-white/10">
-                      <span className="text-purple-400 font-bold">•</span>
-                      <span className="text-purple-100">{finding}</span>
+                      <span className="text-harvest-400 font-bold">•</span>
+                      <span className="text-slate-200">{finding}</span>
                     </div>
                   ))}
                 </div>
               </div>
 
               {/* Privacy Notice */}
-              <div className="flex items-center justify-between text-[11px] text-purple-300 border-t border-purple-800/80 pt-3">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between text-[11px] text-slate-400 border-t border-navy-800 pt-3">
                 <span className="flex items-center space-x-1.5">
-                  <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                  <span>Dvigatel: <strong>{aiInsights.generation_method}</strong> (Faktik tekshirilgan)</span>
+                  <ShieldCheck className="w-4 h-4 text-agro-400" />
+                  <span>Dvigatel: <strong className="text-slate-300">{aiInsights.generation_method}</strong> (Faktik tekshirilgan)</span>
                 </span>
                 <span className="italic">{aiInsights.disclaimer_uz}</span>
+              </div>
               </div>
             </div>
 
@@ -1375,7 +1526,7 @@ function DashboardContent() {
               {aiInsights.insights.map((insight) => (
                 <div 
                   key={insight.insight_id}
-                  className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4"
+                  className="bg-white p-5 rounded-xl border border-slate-200/80 shadow-card space-y-4"
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
                     <div className="flex items-center space-x-2.5">
@@ -1405,7 +1556,7 @@ function DashboardContent() {
 
                     <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl space-y-1.5">
                       <span className="font-bold text-emerald-900 flex items-center space-x-1.5">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                        <CheckCircle2 className="w-4 h-4 text-agro-600" />
                         <span>Boshqaruv Tavsiyasi (CFO Tavsiyasi):</span>
                       </span>
                       <p className="text-emerald-950 leading-relaxed text-xs">
@@ -1437,9 +1588,9 @@ function DashboardContent() {
 export default function DashboardPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="min-h-screen bg-canvas flex items-center justify-center">
         <div className="flex items-center space-x-2 text-slate-600 text-sm">
-          <RefreshCw className="w-5 h-5 animate-spin text-emerald-600" />
+          <RefreshCw className="w-5 h-5 animate-spin text-agro-600" />
           <span>Yuklanmoqda...</span>
         </div>
       </div>

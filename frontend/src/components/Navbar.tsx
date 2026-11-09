@@ -2,46 +2,71 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Sprout, LayoutDashboard, FileSpreadsheet, Sliders, ShieldCheck, Database, Landmark, Users } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import {
+  Sprout,
+  LayoutDashboard,
+  FileSpreadsheet,
+  Sliders,
+  ShieldCheck,
+  Database,
+  Landmark,
+  Users,
+  Menu,
+  X,
+  ArrowRight,
+} from 'lucide-react';
 
 const NAV_ITEMS = [
   { href: '/', label: 'Asosiy', icon: Sprout },
   { href: '/demo', label: 'Demo Ssenariylar', icon: Database },
   { href: '/dashboard', label: 'Moliya Paneli', icon: LayoutDashboard },
-  { href: '/data-import', label: 'Faktura & Data Yuklash', icon: FileSpreadsheet },
-  { href: '/scenario-analysis', label: 'Ssenariy & Stress-Test', icon: Sliders },
-  { href: '/credit-report', label: 'Kreditga Tayyorgarlik', icon: ShieldCheck },
+  { href: '/data-import', label: 'Data Yuklash', icon: FileSpreadsheet },
+  { href: '/scenario-analysis', label: 'Stress-Test', icon: Sliders },
+  { href: '/credit-report', label: 'Kredit Dosyesi', icon: ShieldCheck },
   { href: '/collateral-subsidies', label: 'Garov & Subsidiyalar', icon: Landmark },
   { href: '/pilot-dashboard', label: 'Pilot & Tadqiqot', icon: Users },
 ];
 
 export default function Navbar() {
   const pathname = usePathname();
+  const [open, setOpen] = useState(false);
+
+  // Close the mobile panel whenever navigation happens
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
+
+  // Lock body scroll while the mobile panel is open
+  useEffect(() => {
+    document.body.style.overflow = open ? 'hidden' : '';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [open]);
 
   return (
-    <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200">
-      {/* Uzbekistan Agri-FinTech Banner */}
-      <div className="bg-agro-900 text-white text-xs py-1 px-4 font-medium flex justify-between items-center">
-        <span>AGROVENTURES 2026 STARTAP SELEKSIYASI | B2B AGRI-FINTECH SaaS</span>
-        <span className="hidden md:inline bg-agro-700 px-2 py-0.5 rounded text-[11px]">
-          O'zbekiston agrar sektori uchun AI-CFO platformasi
-        </span>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          <Link href="/" className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-lg bg-agro-600 flex items-center justify-center text-white shadow-md">
-              <Sprout className="w-6 h-6" />
-            </div>
-            <div>
-              <span className="text-xl font-bold text-slate-900 tracking-tight">AgroHisob</span>
-              <span className="text-xl font-semibold text-agro-600 ml-1">CFO</span>
-              <span className="block text-[10px] text-slate-500 uppercase tracking-widest font-semibold">AgriFinTech B2B</span>
-            </div>
+    <header className="sticky top-0 z-50 border-b border-slate-200/70 bg-white/90 backdrop-blur-md">
+      <div className="container-x">
+        <div className="flex h-16 items-center justify-between gap-4">
+          {/* Brand */}
+          <Link href="/" className="group flex shrink-0 items-center gap-2.5" aria-label="AgroHisob CFO — asosiy sahifa">
+            <span className="flex h-9 w-9 items-center justify-center rounded-[10px] bg-agro-700 text-white shadow-sm transition-colors duration-300 group-hover:bg-agro-800">
+              <Sprout className="h-5 w-5" />
+            </span>
+            <span className="leading-none">
+              <span className="flex items-baseline gap-1 text-[17px] font-bold tracking-tight text-navy-900">
+                AgroHisob
+                <span className="text-agro-700">CFO</span>
+              </span>
+              <span className="mt-1 block text-[9px] font-semibold uppercase tracking-[0.2em] text-slate-400">
+                AgriFinTech Platformasi
+              </span>
+            </span>
           </Link>
 
-          <nav className="hidden lg:flex space-x-1">
+          {/* Desktop navigation */}
+          <nav className="hidden items-center gap-0.5 xl:flex" aria-label="Asosiy menyu">
             {NAV_ITEMS.map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href;
@@ -49,35 +74,102 @@ export default function Navbar() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  className={`relative flex items-center gap-1.5 rounded-lg px-3 py-2 text-[13px] font-medium transition-colors duration-200 ${
                     isActive
-                      ? 'bg-agro-50 text-agro-700 font-semibold'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                      ? 'bg-agro-50 text-agro-800'
+                      : 'text-slate-600 hover:bg-slate-100/80 hover:text-navy-900'
                   }`}
                 >
-                  <Icon className={`w-4 h-4 ${isActive ? 'text-agro-600' : 'text-slate-400'}`} />
+                  <Icon className={`h-4 w-4 ${isActive ? 'text-agro-700' : 'text-slate-400'}`} />
                   <span>{item.label}</span>
                 </Link>
               );
             })}
           </nav>
 
-          <div className="flex items-center space-x-2">
+          {/* Actions */}
+          <div className="flex items-center gap-2">
             <Link
               href="/login"
-              className="inline-flex items-center justify-center px-3 py-2 border border-slate-300 rounded-lg text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 transition-all shadow-xs"
+              className="hidden items-center justify-center rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm font-medium text-slate-700 shadow-sm transition-all duration-200 hover:border-slate-400 hover:text-navy-900 md:inline-flex"
             >
               Kirish
             </Link>
             <Link
               href="/demo"
-              className="inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-agro-600 hover:bg-agro-700 shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-agro-500"
+              className="hidden items-center justify-center gap-1.5 rounded-lg bg-agro-700 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:bg-agro-800 hover:shadow-md active:translate-y-px sm:inline-flex"
             >
               Demo Sinov
+              <ArrowRight className="h-4 w-4" />
             </Link>
+            <button
+              type="button"
+              onClick={() => setOpen((v) => !v)}
+              aria-expanded={open}
+              aria-controls="mobile-nav"
+              aria-label={open ? 'Menyuni yopish' : 'Menyuni ochish'}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 shadow-sm transition-colors hover:bg-slate-50 xl:hidden"
+            >
+              {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
           </div>
         </div>
       </div>
+
+      {/* Mobile navigation panel */}
+      {open && (
+        <div
+          id="mobile-nav"
+          className="border-t border-slate-200/70 bg-white xl:hidden"
+        >
+          <div className="container-x max-h-[calc(100vh-4rem)] overflow-y-auto py-4">
+            <nav className="grid grid-cols-1 gap-1" aria-label="Mobil menyu">
+              {NAV_ITEMS.map((item) => {
+                const Icon = item.icon;
+                const isActive = pathname === item.href;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`flex items-center gap-3 rounded-lg px-3 py-3 text-[15px] font-medium transition-colors ${
+                      isActive
+                        ? 'bg-agro-50 text-agro-800'
+                        : 'text-slate-700 hover:bg-slate-50'
+                    }`}
+                  >
+                    <span
+                      className={`flex h-9 w-9 items-center justify-center rounded-lg border ${
+                        isActive
+                          ? 'border-agro-200 bg-white text-agro-700'
+                          : 'border-slate-200 bg-slate-50 text-slate-500'
+                      }`}
+                    >
+                      <Icon className="h-5 w-5" />
+                    </span>
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </nav>
+
+            <div className="mt-4 grid grid-cols-2 gap-2 border-t border-slate-100 pt-4">
+              <Link
+                href="/login"
+                className="flex items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+              >
+                Kirish
+              </Link>
+              <Link
+                href="/demo"
+                className="flex items-center justify-center gap-1.5 rounded-lg bg-agro-700 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-agro-800"
+              >
+                Demo Sinov
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   );
 }

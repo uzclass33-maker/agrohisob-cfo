@@ -2,13 +2,193 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --foreground-rgb: 15, 23, 42;
-  --background-rgb: 248, 250, 252;
+/* ---------------------------------------------------------------------------
+   AgroHisob CFO — design system foundations
+   Light neutral canvas, deep field-green + navy, restrained harvest accent.
+--------------------------------------------------------------------------- */
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-canvas text-slate-900 antialiased;
+    font-feature-settings: 'cv11', 'ss01';
+  }
+
+  ::selection {
+    @apply bg-agro-200 text-agro-950;
+  }
+
+  /* Visible, consistent focus for keyboard navigation */
+  :focus-visible {
+    outline: 2px solid #4c8a6a;
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Finer scrollbars */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5d1 transparent;
+  }
+  *::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  *::-webkit-scrollbar-thumb {
+    background-color: #cbd5d1;
+    border-radius: 8px;
+  }
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  /* Refined native range inputs used by stress-test / scenario sliders */
+  input[type='range'] {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 4px;
+    border-radius: 9999px;
+    background: #e2e8f0;
+    outline-offset: 6px;
+    cursor: pointer;
+  }
+  input[type='range']::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 18px;
+    width: 18px;
+    border-radius: 9999px;
+    background: #ffffff;
+    border: 2px solid #2f5a45;
+    box-shadow: 0 1px 3px rgba(16, 33, 26, 0.28);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  input[type='range']::-webkit-slider-thumb:hover {
+    transform: scale(1.1);
+    box-shadow: 0 2px 6px rgba(16, 33, 26, 0.32);
+  }
+  input[type='range']::-webkit-slider-thumb:active {
+    transform: scale(0.94);
+  }
+  input[type='range']::-moz-range-thumb {
+    height: 18px;
+    width: 18px;
+    border-radius: 9999px;
+    background: #ffffff;
+    border: 2px solid #2f5a45;
+    box-shadow: 0 1px 3px rgba(16, 33, 26, 0.28);
+    transition: transform 0.15s ease;
+  }
+  input[type='range']::-moz-range-thumb:hover {
+    transform: scale(1.1);
+  }
 }
 
-body {
-  color: rgb(var(--foreground-rgb));
-  background-color: rgb(var(--background-rgb));
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+@layer components {
+  /* Shared page shell & horizontal container */
+  .page-shell {
+    @apply min-h-screen bg-canvas;
+  }
+  .container-x {
+    @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
+  }
+
+  /* Surface primitives — crisp edges, hairline borders, quiet shadow */
+  .card {
+    @apply rounded-xl border border-slate-200/80 bg-white shadow-card;
+  }
+  .card-hover {
+    @apply transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-agro-300 hover:shadow-lift;
+  }
+
+  /* Eyebrow label above headings */
+  .eyebrow {
+    @apply inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.16em];
+  }
+
+  /* Tabular numerals for financial values */
+  .num {
+    @apply tabular-nums;
+  }
+
+  /* Primary / secondary button recipes */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg text-sm font-semibold transition-all duration-200 ease-out;
+  }
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg text-sm font-semibold transition-all duration-200 ease-out bg-agro-700 text-white shadow-sm hover:bg-agro-800 hover:shadow-md active:translate-y-px active:shadow-sm disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg text-sm font-semibold transition-all duration-200 ease-out border border-slate-300 bg-white text-slate-700 shadow-sm hover:border-slate-400 hover:bg-slate-50 hover:text-slate-900 active:translate-y-px;
+  }
+  .btn-dark {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg text-sm font-semibold transition-all duration-200 ease-out bg-navy-900 text-white shadow-sm hover:bg-navy-800 active:translate-y-px;
+  }
+}
+
+@layer utilities {
+  /* Keyframes for the hero stagger (defined here so Tailwind always emits them) */
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(14px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Faint ledger-grid backdrop for hero / CTA panels */
+  .bg-grid {
+    background-image:
+      linear-gradient(to right, rgba(16, 33, 26, 0.055) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(16, 33, 26, 0.055) 1px, transparent 1px);
+    background-size: 48px 48px;
+  }
+  .bg-grid-light {
+    background-image:
+      linear-gradient(to right, rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+    background-size: 48px 48px;
+  }
+  .mask-fade-b {
+    -webkit-mask-image: linear-gradient(to bottom, black 40%, transparent 100%);
+    mask-image: linear-gradient(to bottom, black 40%, transparent 100%);
+  }
+
+  /* Hero stagger — applied to direct children of .hero-stagger */
+  .hero-stagger > * {
+    opacity: 0;
+    animation: rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+  .hero-stagger > *:nth-child(1) { animation-delay: 0.05s; }
+  .hero-stagger > *:nth-child(2) { animation-delay: 0.14s; }
+  .hero-stagger > *:nth-child(3) { animation-delay: 0.23s; }
+  .hero-stagger > *:nth-child(4) { animation-delay: 0.32s; }
+  .hero-stagger > *:nth-child(5) { animation-delay: 0.41s; }
+  .hero-stagger > *:nth-child(6) { animation-delay: 0.5s; }
+}
+
+/* ---------------------------------------------------------------------------
+   Reduced motion — everything must remain visible & usable without animation
+--------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .hero-stagger > * {
+    opacity: 1;
+    animation: none;
+  }
 }
