@@ -61,7 +61,7 @@ def test_live_fastapi_server_endpoints():
 
 
 def test_live_nextjs_frontend_routes():
-    routes = ["/", "/demo", "/dashboard", "/data-import", "/scenario-analysis", "/credit-report"]
+    routes = ["/", "/demo", "/dashboard", "/data-import", "/scenario-analysis", "/credit-report", "/collateral-subsidies"]
     for r in routes:
         with urllib.request.urlopen(f"http://localhost:3000{r}") as resp:
             assert resp.status == 200

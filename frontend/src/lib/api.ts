@@ -294,3 +294,261 @@ export async function explainInsightAPI(params: {
   }
   return res.json();
 }
+
+// =========================================================================
+// ASSIGNMENT 5: CREDIT DOSSIER & REPORTING CLIENT APIS
+// =========================================================================
+
+export async function validateCreditProfileAPI(profile: any): Promise<{
+  is_valid: boolean;
+  errors: string[];
+  credit_profile: any;
+}> {
+  const res = await fetch(`${API_BASE}/api/v1/reports/credit/profile`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(profile),
+    cache: 'no-store'
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.detail || `Kredit profilini tekshirishda xatolik yuz berdi: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function fetchDocumentReadinessChecklist(organizationId: string): Promise<any> {
+  const res = await fetch(`${API_BASE}/api/v1/reports/credit/validate?organization_id=${encodeURIComponent(organizationId)}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ organization_id: organizationId }),
+    cache: 'no-store'
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.detail || `Hujjatlar ro'yxatini yuklashda xatolik yuz berdi: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function previewCreditDossier(organizationId: string, customProfile?: any): Promise<any> {
+  const res = await fetch(`${API_BASE}/api/v1/reports/credit/preview`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      organization_id: organizationId,
+      fiscal_year: 2026,
+      credit_profile: customProfile
+    }),
+    cache: 'no-store'
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.detail || `Kredit dosye dastlabki ko'rinishini shakllantirishda xatolik: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function generateCreditDossier(organizationId: string, customProfile?: any): Promise<any> {
+  const res = await fetch(`${API_BASE}/api/v1/reports/credit/generate`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      organization_id: organizationId,
+      fiscal_year: 2026,
+      credit_profile: customProfile
+    }),
+    cache: 'no-store'
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.detail || `Hisobot fayllarini generatsiya qilishda xatolik yuz berdi: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function fetchReportHistory(organizationId?: string): Promise<any[]> {
+  const url = organizationId 
+    ? `${API_BASE}/api/v1/reports/history?organization_id=${encodeURIComponent(organizationId)}`
+    : `${API_BASE}/api/v1/reports/history`;
+  const res = await fetch(url, { cache: 'no-store' });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.detail || `Hisobotlar tarixini yuklashda xatolik: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export function getFullDownloadUrl(pathUrl: string): string {
+  if (pathUrl.startsWith('http://') || pathUrl.startsWith('https://')) {
+    return pathUrl;
+  }
+  return `${API_BASE}${pathUrl}`;
+}
+
+
+// ==========================================
+// ASSIGNMENT 6: COLLATERAL, SUBSIDIES & REGULATORY API CLIENTS
+// ==========================================
+
+export async function fetchRegulatorySources(verifiedOnly: boolean = true): Promise<any[]> {
+  const res = await fetch(`${API_BASE}/api/v1/regulatory/sources?verified_only=${verifiedOnly}`, { cache: 'no-store' });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.detail || `Me'yoriy hujjatlarni yuklashda xatolik: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function fetchRegulatorySource(code: string): Promise<any> {
+  const res = await fetch(`${API_BASE}/api/v1/regulatory/sources/${encodeURIComponent(code)}`, { cache: 'no-store' });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.detail || `Me'yoriy hujjat ma'lumotlarini olishda xatolik: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function fetchDefaultCollateralProfile(organizationId: string = 'scenario-small-farmer'): Promise<any> {
+  const res = await fetch(`${API_BASE}/api/v1/collateral/profile/default?organization_id=${encodeURIComponent(organizationId)}`, { cache: 'no-store' });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.detail || `Standart garov profilini yuklashda xatolik: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function screenCollateralEligibility(profile: any): Promise<any> {
+  const res = await fetch(`${API_BASE}/api/v1/collateral/eligibility`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(profile),
+    cache: 'no-store'
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.detail || `VMQ-613 huquqiy tahlilida xatolik: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function calculateCollateralValuation(req: any): Promise<any> {
+  const res = await fetch(`${API_BASE}/api/v1/collateral/valuation/illustrative`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(req),
+    cache: 'no-store'
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.detail || `Indikativ baholashda xatolik: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function calculateCollateralScenarios(req: any): Promise<any> {
+  const res = await fetch(`${API_BASE}/api/v1/collateral/scenarios`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(req),
+    cache: 'no-store'
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.detail || `Sezgirlik ssenariylarini hisoblashda xatolik: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function fetchCollateralChecklist(profile: any): Promise<any> {
+  const res = await fetch(`${API_BASE}/api/v1/collateral/checklist`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(profile),
+    cache: 'no-store'
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.detail || `Hujjatlar cheklistini yuklashda xatolik: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function fetchCollateralSummary(profile: any): Promise<any> {
+  const res = await fetch(`${API_BASE}/api/v1/collateral/summary`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(profile),
+    cache: 'no-store'
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.detail || `Garov xulosasini yuklashda xatolik: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function fetchSubsidyPrograms(): Promise<any[]> {
+  const res = await fetch(`${API_BASE}/api/v1/subsidies/programs`, { cache: 'no-store' });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.detail || `Subsidiya dasturlarini yuklashda xatolik: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function matchSubsidyPrograms(req: any): Promise<any[]> {
+  const res = await fetch(`${API_BASE}/api/v1/subsidies/match`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(req),
+    cache: 'no-store'
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.detail || `Subsidiya mosligini tahlil qilishda xatolik: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function calculatePQ47(req: any): Promise<any> {
+  const res = await fetch(`${API_BASE}/api/v1/subsidies/calculate/pq47`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(req),
+    cache: 'no-store'
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.detail || `PQ-47 hisob-kitobida xatolik: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function calculatePF82(req: any): Promise<any> {
+  const res = await fetch(`${API_BASE}/api/v1/subsidies/calculate/pf82`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(req),
+    cache: 'no-store'
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.detail || `PF-82 hisob-kitobida xatolik: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function calculateSubsidyFinancialImpact(req: any): Promise<any> {
+  const res = await fetch(`${API_BASE}/api/v1/subsidies/financial-impact`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(req),
+    cache: 'no-store'
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.detail || `Subsidiya moliyaviy ta'sirini baholashda xatolik: ${res.statusText}`);
+  }
+  return res.json();
+}

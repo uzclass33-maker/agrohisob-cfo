@@ -1,6 +1,9 @@
 import os
+import logging
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from typing import List
+from typing import List, Union
+
+logger = logging.getLogger(__name__)
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
@@ -10,8 +13,8 @@ class Settings(BaseSettings):
 
     APP_NAME: str = "AgroHisob CFO"
     APP_VERSION: str = "1.0.0-mvp"
-    ENVIRONMENT: str = "development"
-    DEBUG: bool = True
+    ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")
+    DEBUG: bool = os.getenv("DEBUG", "true").lower() in ("true", "1", "yes")
     
     # API Settings
     API_V1_PREFIX: str = "/api"
@@ -24,13 +27,22 @@ class Settings(BaseSettings):
     )
     SQLITE_FALLBACK_URL: str = "sqlite:///./agrohisob_local.db"
     
-    # CORS Origins
-    CORS_ORIGINS: List[str] = [
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-        "http://localhost:8000",
-        "http://127.0.0.1:8000"
-    ]
+    # CORS Origins (parsed dynamically from env or default local dev ports)
+    CORS_ORIGINS_RAW: Union[str, List[str]] = os.getenv(
+        "ALLOWED_ORIGINS",
+        os.getenv(
+            "CORS_ORIGINS",
+            "http://localhost:3000,http://127.0.0.1:3000,http://localhost:8000,http://127.0.0.1:8000,https://agrohisob-cfo.vercel.app"
+        )
+    )
+    
+    @property
+    def CORS_ORIGINS(self) -> List[str]:
+        if isinstance(self.CORS_ORIGINS_RAW, list):
+            return self.CORS_ORIGINS_RAW
+        if isinstance(self.CORS_ORIGINS_RAW, str):
+            return [origin.strip() for origin in self.CORS_ORIGINS_RAW.split(",") if origin.strip()]
+        return ["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:8000", "http://127.0.0.1:8000"]
     
     # Security Settings
     SECRET_KEY: str = os.getenv("SECRET_KEY", "agrohisob-dev-secret-key-uzbekistan-2026-agrifintech")
@@ -42,4 +54,13 @@ class Settings(BaseSettings):
     PREFERENTIAL_AGRO_RATE: float = 0.14   # 10-14% state preferential fund rate (PQ-47/Agrofin)
     MIN_ACCEPTABLE_DSCR: float = 1.25      # Standard banking debt service coverage threshold
 
+    def validate_production_security(self) -> None:
+        """Logs warnings or raises issues if unsafe defaults are used in production."""
+        if self.ENVIRONMENT.lower() == "production":
+            if "dev-secret-key" in self.SECRET_KEY:
+                logger.warning("SECURITY ALERT: Using default dev SECRET_KEY in production! Please set SECRET_KEY in environment.")
+            if self.DEBUG:
+                logger.warning("SECURITY ALERT: DEBUG is enabled in production environment!")
+
 settings = Settings()
+settings.validate_production_security()

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Sprout, LayoutDashboard, FileSpreadsheet, Sliders, ShieldCheck, Database } from 'lucide-react';
+import { Sprout, LayoutDashboard, FileSpreadsheet, Sliders, ShieldCheck, Database, Landmark } from 'lucide-react';
 
 const NAV_ITEMS = [
   { href: '/', label: 'Asosiy', icon: Sprout },
@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { href: '/data-import', label: 'Faktura & Data Yuklash', icon: FileSpreadsheet },
   { href: '/scenario-analysis', label: 'Ssenariy & Stress-Test', icon: Sliders },
   { href: '/credit-report', label: 'Kreditga Tayyorgarlik', icon: ShieldCheck },
+  { href: '/collateral-subsidies', label: 'Garov & Subsidiyalar', icon: Landmark },
 ];
 
 export default function Navbar() {
@@ -60,7 +61,13 @@ export default function Navbar() {
             })}
           </nav>
 
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2">
+            <Link
+              href="/login"
+              className="inline-flex items-center justify-center px-3 py-2 border border-slate-300 rounded-lg text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 transition-all shadow-xs"
+            >
+              Kirish
+            </Link>
             <Link
               href="/demo"
               className="inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-agro-600 hover:bg-agro-700 shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-agro-500"

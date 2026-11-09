@@ -1,13 +1,35 @@
+import time
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
 from app.config import settings
 from app.db.database import init_db
 from app.api import (
     routes_scenarios, routes_financials, routes_reports, 
     routes_demo, routes_finance, routes_imports,
-    routes_dashboard, routes_insights
+    routes_dashboard, routes_insights, routes_dossier,
+    routes_regulatory, routes_collateral, routes_subsidies
 )
+
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    """Adds enterprise HTTP security headers and request execution timing to all responses."""
+    async def dispatch(self, request: Request, call_next):
+        start_time = time.time()
+        response = await call_next(request)
+        process_time = time.time() - start_time
+        
+        # Performance & Observability
+        response.headers["X-Process-Time"] = f"{process_time:.6f}s"
+        
+        # Enterprise AppSec Headers
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
+        
+        return response
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -23,7 +45,10 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Configure CORS
+# Register Security Headers Middleware
+app.add_middleware(SecurityHeadersMiddleware)
+
+# Configure CORS dynamically
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ORIGINS,
@@ -42,6 +67,10 @@ for prefix in ["/api", "/api/v1"]:
     app.include_router(routes_imports.router, prefix=prefix)
     app.include_router(routes_dashboard.router, prefix=prefix)
     app.include_router(routes_insights.router, prefix=prefix)
+    app.include_router(routes_dossier.router, prefix=prefix)
+    app.include_router(routes_regulatory.router, prefix=prefix)
+    app.include_router(routes_collateral.router, prefix=prefix)
+    app.include_router(routes_subsidies.router, prefix=prefix)
 
 @app.get("/")
 def root():
