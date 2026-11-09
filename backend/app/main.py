@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.db.database import init_db
-from app.api import routes_scenarios, routes_financials, routes_reports
+from app.api import routes_scenarios, routes_financials, routes_reports, routes_demo
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -28,10 +28,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Register API Routers
-app.include_router(routes_scenarios.router, prefix=settings.API_V1_PREFIX)
-app.include_router(routes_financials.router, prefix=settings.API_V1_PREFIX)
-app.include_router(routes_reports.router, prefix=settings.API_V1_PREFIX)
+# Register API Routers for both /api and /api/v1 for standard backward & versioned compatibility
+for prefix in ["/api", "/api/v1"]:
+    app.include_router(routes_scenarios.router, prefix=prefix)
+    app.include_router(routes_financials.router, prefix=prefix)
+    app.include_router(routes_reports.router, prefix=prefix)
+    app.include_router(routes_demo.router, prefix=prefix)
 
 @app.get("/")
 def root():
@@ -44,11 +46,23 @@ def root():
         "api_prefix": settings.API_V1_PREFIX
     }
 
+@app.get("/health")
 @app.get("/api/health")
 def health_check():
     return {
         "status": "healthy",
+        "service": "agrohisob-backend",
+        "version": settings.APP_VERSION,
         "engine": "Python/FastAPI Financial Engine",
         "environment": settings.ENVIRONMENT,
         "database": "connected"
+    }
+
+@app.get("/ready")
+def readiness_check():
+    return {
+        "status": "ready",
+        "database": "connected",
+        "engine_version": "1.0.0",
+        "environment": settings.ENVIRONMENT
     }

@@ -17,6 +17,9 @@ class Organization(Base):
     name = Column(String(255), nullable=False)
     inn = Column(String(9), unique=True, nullable=False, index=True) # STIR
     legal_type = Column(String(50), nullable=False) # FERMER_XOJALIGI, MCHJ, AGRO_KLASTER
+    organization_type = Column(String(50), nullable=True) # SMALL_FARMER, AGRO_EXPORTER, AGRO_CLUSTER
+    base_currency = Column(String(3), nullable=False, default="UZS")
+    is_demo = Column(Boolean, default=False)
     region = Column(String(100), nullable=False)
     district = Column(String(100), nullable=False)
     land_hectares = Column(Numeric(10, 2), nullable=False)
@@ -31,6 +34,7 @@ class Organization(Base):
 
     # Relationships
     users = relationship("User", back_populates="organization", cascade="all, delete-orphan")
+    memberships = relationship("OrganizationMembership", back_populates="organization", cascade="all, delete-orphan")
     financial_periods = relationship("FinancialPeriod", back_populates="organization", cascade="all, delete-orphan")
     transactions = relationship("Transaction", back_populates="organization", cascade="all, delete-orphan")
     imported_files = relationship("ImportedFile", back_populates="organization", cascade="all, delete-orphan")
@@ -53,6 +57,21 @@ class User(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     organization = relationship("Organization", back_populates="users")
+    memberships = relationship("OrganizationMembership", back_populates="user", cascade="all, delete-orphan")
+
+class OrganizationMembership(Base):
+    __tablename__ = "organization_memberships"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    organization_id = Column(String(36), ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    role = Column(String(50), nullable=False, default="CHIEF_ACCOUNTANT") # OWNER, CFO, CHIEF_ACCOUNTANT, AUDITOR
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    organization = relationship("Organization", back_populates="memberships")
+    user = relationship("User", back_populates="memberships")
 
 class FinancialPeriod(Base):
     __tablename__ = "financial_periods"

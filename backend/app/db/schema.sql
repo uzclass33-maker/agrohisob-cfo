@@ -42,6 +42,9 @@ CREATE TABLE organizations (
     name VARCHAR(255) NOT NULL,
     inn VARCHAR(9) UNIQUE NOT NULL, -- STIR (9 digits in Uzbekistan)
     legal_type legal_structure_enum NOT NULL,
+    organization_type VARCHAR(50) DEFAULT 'SMALL_FARMER',
+    base_currency VARCHAR(3) DEFAULT 'UZS',
+    is_demo BOOLEAN DEFAULT FALSE,
     region VARCHAR(100) NOT NULL,
     district VARCHAR(100) NOT NULL,
     land_hectares NUMERIC(10, 2) NOT NULL CHECK (land_hectares > 0),
@@ -57,6 +60,23 @@ CREATE TABLE organizations (
 
 CREATE INDEX idx_organizations_inn ON organizations(inn);
 CREATE INDEX idx_organizations_region ON organizations(region);
+
+-- ---------------------------------------------------------------------
+-- 2.1 ORGANIZATION MEMBERSHIPS (MULTI-TENANCY & RBAC)
+-- ---------------------------------------------------------------------
+CREATE TABLE organization_memberships (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    role user_role_enum NOT NULL DEFAULT 'CHIEF_ACCOUNTANT',
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT uq_org_user_membership UNIQUE (organization_id, user_id)
+);
+
+CREATE INDEX idx_org_memberships_user ON organization_memberships(user_id);
+CREATE INDEX idx_org_memberships_org ON organization_memberships(organization_id);
 
 -- ---------------------------------------------------------------------
 -- 3. USERS (AUTHENTICATION & RBAC)

@@ -5,11 +5,56 @@ from app.main import app
 client = TestClient(app)
 
 def test_api_health():
-    res = client.get("/api/health")
+    res = client.get("/health")
     assert res.status_code == 200
     data = res.json()
     assert data["status"] == "healthy"
-    assert "engine" in data
+    assert data["service"] == "agrohisob-backend"
+    assert "version" in data
+
+    res_api = client.get("/api/health")
+    assert res_api.status_code == 200
+
+def test_api_readiness():
+    res = client.get("/ready")
+    assert res.status_code == 200
+    data = res.json()
+    assert data["status"] == "ready"
+    assert data["database"] == "connected"
+
+def test_v1_demo_organizations():
+    res = client.get("/api/v1/demo/organizations")
+    assert res.status_code == 200
+    data = res.json()
+    assert len(data) == 3
+    ids = [org["id"] for org in data]
+    assert "scenario-small-farmer" in ids
+    assert "scenario-exporter" in ids
+    assert "scenario-cluster" in ids
+    for org in data:
+        assert org["is_demo"] is True
+        assert org["currency"] == "UZS"
+
+def test_v1_demo_organization_details():
+    res = client.get("/api/v1/demo/organizations/scenario-small-farmer")
+    assert res.status_code == 200
+    data = res.json()
+    assert data["organization"]["name"] == "Andijon Baraka Fermer Xo'jaligi (Sintetik Demo)"
+    assert data["currency"] == "UZS"
+    assert data["is_demo"] is True
+
+def test_v1_demo_organization_cashflow():
+    res = client.get("/api/v1/demo/organizations/scenario-small-farmer/cashflow")
+    assert res.status_code == 200
+    data = res.json()
+    assert data["organization_id"] == "scenario-small-farmer"
+    assert data["currency"] == "UZS"
+    assert data["reporting_period"] == "2024"
+    assert data["is_mathematically_reconciled"] is True
+    assert len(data["monthly_breakdown"]) == 12
+    # Verify monthly roll-forward continuity
+    for i in range(11):
+        assert data["monthly_breakdown"][i+1]["opening_balance"] == data["monthly_breakdown"][i]["closing_balance"]
 
 def test_list_scenarios_api():
     res = client.get("/api/scenarios")
