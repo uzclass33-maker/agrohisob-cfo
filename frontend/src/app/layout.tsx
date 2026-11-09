@@ -2,6 +2,7 @@ import './globals.css';
 import type { Metadata } from 'next';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import BackendWarmup from '@/components/BackendWarmup';
 
 export const metadata: Metadata = {
   title: "AgroHisob CFO — O'zbekiston Agrobiznesi Uchun AI-CFO Platformasi",
@@ -24,6 +25,7 @@ export default function RootLayout({
         />
       </head>
       <body className="flex min-h-screen flex-col bg-canvas text-slate-900 antialiased">
+        <BackendWarmup />
         <Navbar />
         <main className="flex-1">{children}</main>
         <Footer />

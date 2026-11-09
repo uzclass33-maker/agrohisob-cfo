@@ -1,0 +1,28 @@
+name: 24/7 Render Backend Keep-Alive
+
+on:
+  schedule:
+    # Runs every 12 minutes (Render free tier sleeps after 15 minutes of inactivity)
+    - cron: '*/12 * * * *'
+  workflow_dispatch:
+
+jobs:
+  keep-alive:
+    name: Ping Render Backend
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Ping AgroHisob Backend (/health)
+        run: |
+          echo "Pinging https://agrohisob-backend.onrender.com/health at $(date -u)"
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" -m 60 "https://agrohisob-backend.onrender.com/health" || echo "000")
+          echo "HTTP Response Status Code: $STATUS"
+          if [ "$STATUS" -eq "200" ]; then
+            echo "SUCCESS: Backend is awake and healthy!"
+          else
+            echo "WARNING: Initial ping got status $STATUS, retrying after 5 seconds..."
+            sleep 5
+            RETRY_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -m 60 "https://agrohisob-backend.onrender.com/health")
+            echo "Retry Status Code: $RETRY_STATUS"
+          fi

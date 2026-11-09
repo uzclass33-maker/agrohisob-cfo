@@ -1,8 +1,11 @@
+import asyncio
+import logging
 import time
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
+import httpx
 from app.config import settings
 from app.db.database import init_db
 from app.api import (
@@ -12,6 +15,26 @@ from app.api import (
     routes_regulatory, routes_collateral, routes_subsidies,
     routes_research, routes_analytics, routes_pilot
 )
+
+logger = logging.getLogger(__name__)
+
+
+async def render_keep_alive_task():
+    """Periodically self-pings the public Render backend URL to prevent free-tier spin-down (sleep)."""
+    # Wait 60 seconds after startup before first ping
+    await asyncio.sleep(60)
+    target_url = "https://agrohisob-backend.onrender.com/health"
+    while True:
+        try:
+            if getattr(settings, "ENVIRONMENT", "development") == "production":
+                async with httpx.AsyncClient(timeout=15.0) as client:
+                    resp = await client.get(target_url)
+                    logger.info(f"Keep-alive self-ping sent to {target_url} -> status {resp.status_code}")
+        except Exception as e:
+            logger.debug(f"Keep-alive ping attempt: {e}")
+        # Sleep for 10 minutes (600s), well within Render's 15-minute inactivity limit
+        await asyncio.sleep(600)
+
 
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     """Adds enterprise HTTP security headers and request execution timing to all responses."""
@@ -32,12 +55,14 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         
         return response
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup: ensure tables exist
     init_db()
+    keep_alive_job = asyncio.create_task(render_keep_alive_task())
     yield
-    # Shutdown logic if needed
+    keep_alive_job.cancel()
 
 app = FastAPI(
     title=settings.APP_NAME,
