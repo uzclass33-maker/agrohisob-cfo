@@ -1,7 +1,15 @@
 # AgroHisob CFO — AgriFinTech B2B SaaS for Uzbekistan
 
+[![AgroHisob CI/CD](https://github.com/uzclass33-maker/agrohisob-cfo/actions/workflows/ci.yml/badge.svg)](https://github.com/uzclass33-maker/agrohisob-cfo/actions)
+[![Live Demo on Vercel](https://img.shields.io/badge/Vercel-Live%20Demo-brightgreen?logo=vercel)](https://frontend-topaz-phi-ke4fs4ul0h.vercel.app)
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/uzclass33-maker/agrohisob-cfo)
+
 > **AgroVentures 2026 Corporate Accelerator Selection**: #1 Winning Startup Idea (91.5 / 100 Weighted Score)  
 > Designed for Agro-Clusters, Horticulture Exporters, Commercial Farmers, and ATB «Agrobank» Pre-Underwriting.
+>
+> 🌐 **Jonli MVP Veb-Ilova (Vercel):** [https://frontend-topaz-phi-ke4fs4ul0h.vercel.app](https://frontend-topaz-phi-ke4fs4ul0h.vercel.app)  
+> 🔗 **GitHub Ombori:** [https://github.com/uzclass33-maker/agrohisob-cfo](https://github.com/uzclass33-maker/agrohisob-cfo)  
+> 🚀 **1-Klikda Backendni Renderga Joylash:** [Deploy to Render](https://render.com/deploy?repo=https://github.com/uzclass33-maker/agrohisob-cfo)
 
 ---
 
