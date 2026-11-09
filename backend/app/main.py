@@ -9,7 +9,8 @@ from app.api import (
     routes_scenarios, routes_financials, routes_reports, 
     routes_demo, routes_finance, routes_imports,
     routes_dashboard, routes_insights, routes_dossier,
-    routes_regulatory, routes_collateral, routes_subsidies
+    routes_regulatory, routes_collateral, routes_subsidies,
+    routes_research, routes_analytics, routes_pilot
 )
 
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
@@ -71,6 +72,9 @@ for prefix in ["/api", "/api/v1"]:
     app.include_router(routes_regulatory.router, prefix=prefix)
     app.include_router(routes_collateral.router, prefix=prefix)
     app.include_router(routes_subsidies.router, prefix=prefix)
+    app.include_router(routes_research.router, prefix=prefix)
+    app.include_router(routes_analytics.router, prefix=prefix)
+    app.include_router(routes_pilot.router, prefix=prefix)
 
 @app.get("/")
 def root():

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Sprout, LayoutDashboard, FileSpreadsheet, Sliders, ShieldCheck, Database, Landmark } from 'lucide-react';
+import { Sprout, LayoutDashboard, FileSpreadsheet, Sliders, ShieldCheck, Database, Landmark, Users } from 'lucide-react';
 
 const NAV_ITEMS = [
   { href: '/', label: 'Asosiy', icon: Sprout },
@@ -12,6 +12,7 @@ const NAV_ITEMS = [
   { href: '/scenario-analysis', label: 'Ssenariy & Stress-Test', icon: Sliders },
   { href: '/credit-report', label: 'Kreditga Tayyorgarlik', icon: ShieldCheck },
   { href: '/collateral-subsidies', label: 'Garov & Subsidiyalar', icon: Landmark },
+  { href: '/pilot-dashboard', label: 'Pilot & Tadqiqot', icon: Users },
 ];
 
 export default function Navbar() {

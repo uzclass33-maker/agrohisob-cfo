@@ -24,7 +24,9 @@ wheels/
 .pytest_cache/
 .env
 
-# SQLite local databases
+# Generated Reports
+backend/storage/reports/*.pdf
+backend/storage/reports/*.xlsx
 *.db
 *.sqlite3
 

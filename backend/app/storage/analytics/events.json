@@ -1,0 +1,36 @@
+[
+  {
+    "event_type": "import_started",
+    "session_id": "sess-anon-12345",
+    "organization_id": "org-test-cluster",
+    "duration_ms": 120,
+    "status": "SUCCESS",
+    "error_category": null,
+    "metadata": {
+      "file_ext": ".xlsx",
+      "tax_id": "[REDACTED_PII]",
+      "inn": "[REDACTED_PII]",
+      "bank_account": "[REDACTED_PII]",
+      "records_count": 45
+    },
+    "id": "evt-2b078b25a6",
+    "timestamp": "2026-11-09T09:47:07.365168+00:00"
+  },
+  {
+    "event_type": "import_started",
+    "session_id": "sess-anon-12345",
+    "organization_id": "org-test-cluster",
+    "duration_ms": 120,
+    "status": "SUCCESS",
+    "error_category": null,
+    "metadata": {
+      "file_ext": ".xlsx",
+      "tax_id": "[REDACTED_PII]",
+      "inn": "[REDACTED_PII]",
+      "bank_account": "[REDACTED_PII]",
+      "records_count": 45
+    },
+    "id": "evt-ce3f4f9c3f",
+    "timestamp": "2026-11-09T09:47:20.163863+00:00"
+  }
+]
