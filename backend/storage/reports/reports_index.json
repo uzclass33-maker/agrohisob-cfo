@@ -366,5 +366,37 @@
     "file_size_bytes_pdf": 15240,
     "file_size_bytes_xlsx": 15098,
     "calculation_version": "5.0.0"
+  },
+  {
+    "report_id": "rep-bcfeaa15b654",
+    "dossier_id": "dos-f9c3954916",
+    "organization_id": "scenario-exporter",
+    "report_title": "Samarqand Bog'bon Agro Eksport MChJ — Kreditga Tayyorgarlik Dosyesi va Moliyaviy Modeli",
+    "created_at": "2026-11-09T07:15:33.321514+00:00",
+    "status": "COMPLETED",
+    "pdf_path": "C:\\Users\\lenovo\\Desktop\\agroventures\\backend\\storage\\reports\\rep-bcfeaa15b654_scenario-exporter_dossier.pdf",
+    "xlsx_path": "C:\\Users\\lenovo\\Desktop\\agroventures\\backend\\storage\\reports\\rep-bcfeaa15b654_scenario-exporter_model.xlsx",
+    "pdf_url": "/api/v1/reports/rep-bcfeaa15b654/download/pdf",
+    "xlsx_url": "/api/v1/reports/rep-bcfeaa15b654/download/xlsx",
+    "file_hash": "2f437767cc2a22d81a968c46001699811c49370d42473aa35ef414a96054e3e8",
+    "file_size_bytes_pdf": 15186,
+    "file_size_bytes_xlsx": 15034,
+    "calculation_version": "5.0.0"
+  },
+  {
+    "report_id": "rep-c0994b4ae72d",
+    "dossier_id": "dos-84517da229",
+    "organization_id": "scenario-small-farmer",
+    "report_title": "Andijon Baraka Fermer Xo'jaligi — Kreditga Tayyorgarlik Dosyesi va Moliyaviy Modeli",
+    "created_at": "2026-11-09T07:15:35.596625+00:00",
+    "status": "COMPLETED",
+    "pdf_path": "C:\\Users\\lenovo\\Desktop\\agroventures\\backend\\storage\\reports\\rep-c0994b4ae72d_scenario-small-farmer_dossier.pdf",
+    "xlsx_path": "C:\\Users\\lenovo\\Desktop\\agroventures\\backend\\storage\\reports\\rep-c0994b4ae72d_scenario-small-farmer_model.xlsx",
+    "pdf_url": "/api/v1/reports/rep-c0994b4ae72d/download/pdf",
+    "xlsx_url": "/api/v1/reports/rep-c0994b4ae72d/download/xlsx",
+    "file_hash": "13b80ccd75cc2e74ae7e8b34a3865662358b29576dca4b119b993b32e726cba4",
+    "file_size_bytes_pdf": 15240,
+    "file_size_bytes_xlsx": 15098,
+    "calculation_version": "5.0.0"
   }
 ]
