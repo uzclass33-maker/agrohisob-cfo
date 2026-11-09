@@ -47,6 +47,9 @@ class Settings(BaseSettings):
     # Security Settings
     SECRET_KEY: str = os.getenv("SECRET_KEY", "agrohisob-dev-secret-key-uzbekistan-2026-agrifintech")
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24  # 1 day
+    SUPABASE_URL: str = os.getenv("SUPABASE_URL", "https://qyawvaoswvpzruhyehqn.supabase.co")
+    SUPABASE_ANON_KEY: str = os.getenv("SUPABASE_ANON_KEY", "sb_publishable_lVCYYvwvdaFljmQhIJdScw_MrU1BaPt")
+    SUPABASE_JWT_SECRET: Union[str, None] = os.getenv("SUPABASE_JWT_SECRET", None)
     
     # Financial Engine Defaults (Uzbekistan benchmarks)
     DEFAULT_CBU_POLICY_RATE: float = 0.14  # 14.0% CBU rate as of Nov 2026

@@ -7,6 +7,32 @@ import {
 } from './types';
 import { supabase } from './supabaseClient';
 
+export const SYNTHETIC_DEMO_SCENARIO_IDS = new Set<string>([
+  'scenario-small-farmer',
+  'scenario-exporter',
+  'scenario-cluster',
+  'demo-org-farmer',
+  'demo-org-fruit',
+  'demo-org-cluster',
+  'demo-org-agro-01',
+]);
+
+export function isSyntheticDemoScenario(orgId?: string | null): boolean {
+  if (!orgId) return false;
+  const clean = orgId.trim().toLowerCase();
+  return SYNTHETIC_DEMO_SCENARIO_IDS.has(clean) || clean.startsWith('scenario-') || clean.startsWith('demo-');
+}
+
+// Clear any obsolete ad-hoc localStorage tokens on module evaluation
+if (typeof window !== 'undefined') {
+  try {
+    const legacy = localStorage.getItem('agrohisob_demo_token');
+    if (legacy && (legacy.startsWith('test-token-') || legacy === 'test-token-demo')) {
+      localStorage.removeItem('agrohisob_demo_token');
+    }
+  } catch {}
+}
+
 /**
  * Custom error class for API requests providing HTTP status and detailed backend feedback.
  */
@@ -36,6 +62,14 @@ export class ApiError extends Error {
  * Guarantees that production client environments never silently call localhost.
  */
 export function getApiBaseUrl(): string {
+  // In browser on local machine, strictly connect to local backend
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      return 'http://127.0.0.1:8000';
+    }
+  }
+
   const envUrl = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_BACKEND_URL;
   if (envUrl && envUrl.trim() !== '') {
     return envUrl.trim().replace(/\/+$/, '');
@@ -53,55 +87,147 @@ export function getApiBaseUrl(): string {
   return 'http://127.0.0.1:8000';
 }
 
+export interface DemoSessionResponse {
+  access_token: string;
+  token_type: string;
+  expires_in: number;
+  user: {
+    id: string;
+    email: string;
+    full_name: string;
+    role: string;
+    organizations: string[];
+  };
+}
+
+/**
+ * Creates an authentic, cryptographically-signed Demo CFO session from the backend.
+ * Stored safely in localStorage to enable seamless exploration of protected demo features.
+ */
+export async function loginAsDemoSession(): Promise<DemoSessionResponse> {
+  const baseUrl = getApiBaseUrl();
+  let res: Response | null = null;
+  try {
+    res = await fetch(`${baseUrl}/api/v1/demo/session`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    });
+  } catch {
+    res = null;
+  }
+
+  if (!res || !res.ok) {
+    try {
+      res = await fetch(`${baseUrl}/api/demo/session`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+    } catch {
+      res = null;
+    }
+  }
+
+  if (!res || !res.ok) {
+    throw new Error("Demo sessiya yaratishda xatolik yuz berdi.");
+  }
+
+  const data: DemoSessionResponse = await res.json();
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('agrohisob_demo_access_token', data.access_token);
+    localStorage.setItem('agrohisob_demo_user', JSON.stringify(data.user));
+    window.dispatchEvent(new Event('agrohisob_auth_change'));
+  }
+  return data;
+}
+
+export function getStoredDemoUser(): { id: string; email: string; full_name: string; role: string; organizations: string[] } | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem('agrohisob_demo_user');
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function logoutDemoSession(): void {
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem('agrohisob_demo_access_token');
+    localStorage.removeItem('agrohisob_demo_user');
+    window.dispatchEvent(new Event('agrohisob_auth_change'));
+  }
+}
+
 /**
  * Resolves authentication token for API calls.
- * Checks active Supabase session, evaluator demo token in localStorage,
- * or attaches synthetic demo token for open benchmark scenarios in local testing.
- * In production browser environments, returns null for public demo scenarios
- * so requests are sent cleanly without rejected fake tokens.
+ * 1. Checks active Supabase session. If session is near expiry, proactively refreshes it.
+ * 2. Checks active cryptographically-signed Demo Profile session in localStorage.
+ * 3. For public synthetic demo scenarios without a valid session, cleanly returns null so requests travel
+ *    as clean anonymous queries to approved server-side allowlisted scenarios.
  */
 export async function getAuthToken(orgId?: string): Promise<string | null> {
+  const isDemo = isSyntheticDemoScenario(orgId);
+
   // 1. Check Supabase session first
   try {
     const sessionRes = await supabase.auth.getSession();
-    const token = sessionRes?.data?.session?.access_token;
-    if (token) return token;
+    const session = sessionRes?.data?.session;
+    if (session?.access_token) {
+      const nowSec = Math.floor(Date.now() / 1000);
+      const expiresAt = session.expires_at || 0;
+      // Proactively refresh if session expires within 30 seconds
+      if (expiresAt > 0 && expiresAt - nowSec < 30) {
+        try {
+          const refreshRes = await supabase.auth.refreshSession();
+          if (refreshRes?.data?.session?.access_token) {
+            return refreshRes.data.session.access_token;
+          }
+        } catch {
+          // If proactive refresh fails, fall through to return current token or null
+        }
+      }
+      return session.access_token;
+    }
   } catch {
     // Supabase auth client not configured or session expired
   }
 
-  // 2. Check localStorage for evaluator or demo session token
+  // 2. Check for active Demo Profile session token in localStorage
   if (typeof window !== 'undefined') {
-    const storedToken = localStorage.getItem('agrohisob_demo_token');
-    if (storedToken) return storedToken;
+    try {
+      const demoToken = localStorage.getItem('agrohisob_demo_access_token');
+      if (demoToken) {
+        return demoToken;
+      }
+    } catch {}
   }
 
-  // 3. For synthetic benchmark scenarios:
-  // In localhost/development environments only, attach test-tokens for local testing.
-  // In production remote browser environments, return null so the request travels cleanly as
-  // an anonymous public read request to approved synthetic demo scenarios.
-  const isSynthetic = !orgId || orgId.startsWith('scenario-') || orgId.startsWith('demo-');
-  if (isSynthetic) {
-    if (typeof window !== 'undefined') {
-      const hostname = window.location.hostname;
-      if (hostname === 'localhost' || hostname === '127.0.0.1') {
-        if (orgId === 'scenario-exporter') return 'test-token-cfo-org1';
-        if (orgId === 'scenario-small-farmer') return 'test-token-cfo-org2';
-        return 'test-token-demo';
-      }
-    }
+  // 3. For synthetic benchmark scenarios without session, return null for clean anonymous read
+  if (isDemo) {
+    return null;
   }
 
   return null;
 }
 
 /**
+ * Constructs a safe login redirect URL that preserves the user's intended target destination.
+ */
+export function buildLoginRedirectUrl(currentPath?: string): string {
+  if (typeof window === 'undefined') return '/login';
+  const target = currentPath || `${window.location.pathname}${window.location.search}`;
+  return `/login?redirect=${encodeURIComponent(target)}`;
+}
+
+/**
  * Universal authenticated fetch wrapper for AgroHisob CFO APIs.
+ * Supports automatic session refresh, single-retry on 401, and clean anonymous fallback for synthetic demo scenarios.
  */
 export async function authFetch(
   endpoint: string,
   options: RequestInit = {},
-  orgId?: string
+  orgId?: string,
+  retryCount: number = 0
 ): Promise<Response> {
   const baseUrl = getApiBaseUrl();
   const fullUrl = endpoint.startsWith('http://') || endpoint.startsWith('https://')
@@ -109,16 +235,61 @@ export async function authFetch(
     : `${baseUrl}${endpoint.startsWith('/') ? '' : '/'}${endpoint}`;
 
   const headers = new Headers(options.headers || {});
+  const isDemo = isSyntheticDemoScenario(orgId);
 
-  const token = await getAuthToken(orgId);
-  if (token && !headers.has('Authorization')) {
-    headers.set('Authorization', `Bearer ${token}`);
+  // Attach token if not already explicitly set
+  if (!headers.has('Authorization')) {
+    const token = await getAuthToken(orgId);
+    if (token) {
+      headers.set('Authorization', `Bearer ${token}`);
+    }
   }
 
-  return fetch(fullUrl, {
-    ...options,
-    headers,
-  });
+  let res: Response;
+  try {
+    res = await fetch(fullUrl, {
+      ...options,
+      headers,
+    });
+  } catch (netErr: any) {
+    throw new ApiError(
+      "Server bilan aloqa o'rnatilmadi: Tarmoq xatosi yoki server kutish holatida.",
+      0,
+      netErr?.message
+    );
+  }
+
+  // Handle 401 Unauthorized with single retry
+  if (res.status === 401 && retryCount < 1) {
+    // Case 1: If requesting an approved synthetic demo scenario, retry cleanly WITHOUT Authorization header
+    if (isDemo && headers.has('Authorization')) {
+      const demoHeaders = new Headers(options.headers || {});
+      demoHeaders.delete('Authorization');
+      return authFetch(endpoint, { ...options, headers: demoHeaders }, orgId, retryCount + 1);
+    }
+
+    // Case 2: Protected endpoint - attempt session refresh via Supabase
+    try {
+      const refreshRes = await supabase.auth.refreshSession();
+      const newToken = refreshRes?.data?.session?.access_token;
+      if (newToken) {
+        const retryHeaders = new Headers(options.headers || {});
+        retryHeaders.set('Authorization', `Bearer ${newToken}`);
+        return authFetch(endpoint, { ...options, headers: retryHeaders }, orgId, retryCount + 1);
+      }
+    } catch {
+      // Refresh unsuccessful
+    }
+
+    // Clean up any stale credentials if refresh fails
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.removeItem('agrohisob_demo_token');
+      } catch {}
+    }
+  }
+
+  return res;
 }
 
 async function handleApiResponse<T = any>(res: Response, fallbackMessage: string): Promise<T> {

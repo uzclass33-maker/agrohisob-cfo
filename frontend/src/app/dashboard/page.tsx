@@ -215,13 +215,22 @@ function DashboardContent() {
 
     } catch (err: any) {
       console.error("Dashboard data load error:", err);
+      const isDemoOrg = orgId.startsWith('scenario-') || orgId.startsWith('demo-');
       const isExpired = err?.isSessionExpired || err?.message?.toLowerCase()?.includes("muddati") || err?.message?.toLowerCase()?.includes("expired");
       const isAuth = err?.isAuthError || err?.status === 401 || err?.message?.includes("Autentifikatsiya") || err?.message?.includes("401");
       const isForbid = err?.isForbidden || err?.status === 403 || err?.message?.includes("Tashkilotlararo") || err?.message?.includes("403");
       const isNet = err?.isNetworkError || err?.status === 0 || err?.status >= 502 || err?.message?.includes("fetch") || err?.message?.includes("NetworkError") || err?.message?.includes("Failed to fetch") || err?.message?.includes("aborted");
-      const isDemoOrg = orgId.startsWith('scenario-') || orgId.startsWith('demo-');
 
-      if (isExpired) {
+      if (isDemoOrg) {
+        // Public synthetic demo scenarios are accessible without session.
+        if (isNet) {
+          setErrorType('API_UNAVAILABLE');
+          setError("Server bilan aloqa o'rnatilmadi: Render bepul bulutli serveri uyg'onish holatida yoki internet aloqasida uzilish mavjud. Iltimos, qayta urinib ko'ring.");
+        } else {
+          setErrorType('DEMO_LOAD_ERROR');
+          setError(err.detail || err.message || "Sintetik demo ma'lumotlarini yuklashda xatolik yuz berdi. Iltimos, boshqa demo korxonani tanlang.");
+        }
+      } else if (isExpired) {
         setErrorType('EXPIRED_SESSION');
         setError("Sessiya muddati tugadi: Xavfsizlik talablariga muvofiq, tizimga qayta kirishingiz lozim.");
       } else if (isAuth) {
@@ -233,9 +242,6 @@ function DashboardContent() {
       } else if (isNet) {
         setErrorType('API_UNAVAILABLE');
         setError("Server bilan aloqa o'rnatilmadi: Render bepul bulutli serveri uyg'onish holatida yoki internet aloqasida uzilish mavjud. Iltimos, qayta urinib ko'ring.");
-      } else if (isDemoOrg) {
-        setErrorType('DEMO_LOAD_ERROR');
-        setError(err.detail || err.message || "Sintetik demo ma'lumotlarini yuklashda xatolik yuz berdi. Iltimos, quyidagi boshqa demo korxonani tanlang.");
       } else {
         setErrorType('GENERIC');
         setError(err.detail || err.message || "Boshqaruv paneli ma'lumotlarini yuklashda kutilmagan xatolik yuz berdi.");
@@ -329,38 +335,46 @@ function DashboardContent() {
     }
   };
 
-  const getDscrBadge = (rating: string, dscr: number | null) => {
-    if (dscr === null) {
+  const getDscrBadge = (rating: string, dscr: number | string | null | undefined) => {
+    if (dscr === null || dscr === undefined) {
       return (
         <span className="px-2.5 py-1 rounded-md text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200">
           Qarz mavjud emas
         </span>
       );
     }
-    if (dscr >= 1.5) {
+    const val = typeof dscr === 'number' ? dscr : parseFloat(String(dscr));
+    if (isNaN(val)) {
+      return (
+        <span className="px-2.5 py-1 rounded-md text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200">
+          Qarz mavjud emas
+        </span>
+      );
+    }
+    if (val >= 1.5) {
       return (
         <span className="px-2.5 py-1 rounded-md text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
-          {dscr.toFixed(2)}x — Mustahkam (DSCR &ge; 1.50)
+          {val.toFixed(2)}x — Mustahkam (DSCR &ge; 1.50)
         </span>
       );
     }
-    if (dscr >= 1.2) {
+    if (val >= 1.2) {
       return (
         <span className="px-2.5 py-1 rounded-md text-xs font-bold bg-sky-100 text-sky-800 border border-sky-200">
-          {dscr.toFixed(2)}x — Mo'tadil (1.20 - 1.50)
+          {val.toFixed(2)}x — Mo'tadil (1.20 - 1.50)
         </span>
       );
     }
-    if (dscr >= 1.0) {
+    if (val >= 1.0) {
       return (
         <span className="px-2.5 py-1 rounded-md text-xs font-bold bg-amber-100 text-amber-800 border border-amber-200">
-          {dscr.toFixed(2)}x — Cheklangan (1.00 - 1.20)
+          {val.toFixed(2)}x — Cheklangan (1.00 - 1.20)
         </span>
       );
     }
     return (
       <span className="px-2.5 py-1 rounded-md text-xs font-bold bg-rose-100 text-rose-800 border border-rose-200">
-        {dscr.toFixed(2)}x — Kritik Xavfli (DSCR &lt; 1.00)
+        {val.toFixed(2)}x — Kritik Xavfli (DSCR &lt; 1.00)
       </span>
     );
   };
@@ -872,7 +886,7 @@ function DashboardContent() {
                   <Gauge className="w-4 h-4 text-sky-500" />
                 </div>
                 <div className="num text-[26px] font-bold tracking-tight text-slate-900">
-                  {overview.kpis.dscr !== null ? `${overview.kpis.dscr.toFixed(2)}x` : "Qarzsiz"}
+                  {overview.kpis.dscr !== null && overview.kpis.dscr !== undefined ? `${Number(overview.kpis.dscr).toFixed(2)}x` : "Qarzsiz"}
                 </div>
                 <div className="text-xs border-t border-slate-100 pt-2">
                   {getDscrBadge(overview.kpis.dscr_rating, overview.kpis.dscr)}
@@ -971,12 +985,14 @@ function DashboardContent() {
                 </div>
                 <div className="space-y-2.5">
                   {Object.entries(cashflow.inflow_by_category).map(([cat, amount]) => {
-                    const pct = cashflow.total_inflows > 0 ? (amount / cashflow.total_inflows) * 100 : 0;
+                    const numAmount = Number(amount) || 0;
+                    const totalIn = Number(cashflow.total_inflows) || 0;
+                    const pct = totalIn > 0 ? (numAmount / totalIn) * 100 : 0;
                     return (
                       <div key={cat} className="space-y-1">
                         <div className="flex justify-between text-xs font-medium">
                           <span className="text-slate-700">{cat}</span>
-                          <span className="text-slate-900 font-bold">{formatUZS(amount)} ({pct.toFixed(1)}%)</span>
+                          <span className="text-slate-900 font-bold">{formatUZS(numAmount)} ({Number(pct).toFixed(1)}%)</span>
                         </div>
                         <div className="w-full bg-slate-100 rounded-full h-2">
                           <div className="h-2 origin-left animate-growBar rounded-full bg-emerald-600" style={{ width: `${pct}%` }}></div>
@@ -1000,12 +1016,14 @@ function DashboardContent() {
                 </div>
                 <div className="space-y-2.5">
                   {Object.entries(cashflow.outflow_by_category).map(([cat, amount]) => {
-                    const pct = cashflow.total_outflows > 0 ? (amount / cashflow.total_outflows) * 100 : 0;
+                    const numAmount = Number(amount) || 0;
+                    const totalOut = Number(cashflow.total_outflows) || 0;
+                    const pct = totalOut > 0 ? (numAmount / totalOut) * 100 : 0;
                     return (
                       <div key={cat} className="space-y-1">
                         <div className="flex justify-between text-xs font-medium">
                           <span className="text-slate-700">{cat}</span>
-                          <span className="text-slate-900 font-bold">{formatUZS(amount)} ({pct.toFixed(1)}%)</span>
+                          <span className="text-slate-900 font-bold">{formatUZS(numAmount)} ({Number(pct).toFixed(1)}%)</span>
                         </div>
                         <div className="w-full bg-slate-100 rounded-full h-2">
                           <div className="h-2 origin-left animate-growBar rounded-full bg-rose-500" style={{ width: `${pct}%` }}></div>
@@ -1165,7 +1183,7 @@ function DashboardContent() {
                     <div className="flex justify-between items-center">
                       <span className="text-slate-600">Kutilayotgan DSCR:</span>
                       <span className="font-bold text-emerald-700">
-                        {forecast.annual_dscr ? `${forecast.annual_dscr.toFixed(2)}x` : "Qarzsiz"}
+                        {forecast.annual_dscr !== null && forecast.annual_dscr !== undefined ? `${Number(forecast.annual_dscr).toFixed(2)}x` : "Qarzsiz"}
                       </span>
                     </div>
                   </div>
@@ -1213,7 +1231,7 @@ function DashboardContent() {
                           {formatUZS(m.closing_balance)}
                         </td>
                         <td className="py-3 px-4 text-center font-bold">
-                          {m.monthly_dscr !== null ? `${m.monthly_dscr.toFixed(2)}x` : "—"}
+                          {m.monthly_dscr !== null && m.monthly_dscr !== undefined ? `${Number(m.monthly_dscr).toFixed(2)}x` : "—"}
                         </td>
                         <td className="py-3 px-4 text-center">
                           {m.is_deficit ? (
@@ -1273,7 +1291,7 @@ function DashboardContent() {
               <div className="bg-white p-5 rounded-xl border border-slate-200/80 shadow-card space-y-1">
                 <span className="text-xs text-slate-500 font-semibold">Yillik DSCR Qoplash</span>
                 <div className="num text-[26px] font-bold tracking-tight text-slate-900">
-                  {debt.annual_dscr !== null ? `${debt.annual_dscr.toFixed(2)}x` : "Qarzsiz"}
+                  {debt.annual_dscr !== null && debt.annual_dscr !== undefined ? `${Number(debt.annual_dscr).toFixed(2)}x` : "Qarzsiz"}
                 </div>
                 <div className="text-xs pt-1 border-t border-slate-100">
                   {getDscrBadge(debt.dscr_risk_tier, debt.annual_dscr)}
@@ -1654,11 +1672,11 @@ function DashboardContent() {
 
                   <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-card space-y-1">
                     <span className="text-xs text-slate-500 font-semibold">DSCR Farqi</span>
-                    <div className={`num text-xl font-bold tracking-tight ${(simulationResult.variance_dscr || 0) >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
-                      {simulationResult.variance_dscr !== null ? `${simulationResult.variance_dscr >= 0 ? '+' : ''}${simulationResult.variance_dscr.toFixed(2)}x` : '—'}
+                    <div className={`num text-xl font-bold tracking-tight ${(Number(simulationResult.variance_dscr) || 0) >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
+                      {simulationResult.variance_dscr !== null && simulationResult.variance_dscr !== undefined ? `${Number(simulationResult.variance_dscr) >= 0 ? '+' : ''}${Number(simulationResult.variance_dscr).toFixed(2)}x` : '—'}
                     </div>
                     <div className="text-[11px] text-slate-500">
-                      Stressed DSCR: <strong>{simulationResult.stressed.annual_dscr ? `${simulationResult.stressed.annual_dscr.toFixed(2)}x` : 'Qarzsiz'}</strong>
+                      Stressed DSCR: <strong>{simulationResult.stressed.annual_dscr !== null && simulationResult.stressed.annual_dscr !== undefined ? `${Number(simulationResult.stressed.annual_dscr).toFixed(2)}x` : 'Qarzsiz'}</strong>
                     </div>
                   </div>
 

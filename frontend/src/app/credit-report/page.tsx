@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, Suspense } from 'react';
+import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { 
   fetchScenarios,
@@ -26,7 +27,7 @@ import {
   Download, Printer, Building2, MapPin, Award, Layers, 
   TrendingUp, AlertTriangle, RefreshCw, FileSpreadsheet, 
   Calendar, Check, X, HelpCircle, ChevronRight, Sliders,
-  DollarSign, ArrowDownToLine, Clock, Scale
+  DollarSign, ArrowDownToLine, Clock, Scale, ArrowRight
 } from 'lucide-react';
 
 const LOAN_PURPOSES: { value: LoanPurpose; label: string }[] = [
@@ -88,12 +89,17 @@ function CreditReportContent() {
         setProfile(data.credit_profile);
         setChecklist(data.checklist);
 
-        // 2. Fetch history
-        const hist = await fetchReportHistory(selectedOrgId);
-        setHistory(hist);
+        // 2. Fetch history (resilient to optional auth states)
+        try {
+          const hist = await fetchReportHistory(selectedOrgId);
+          setHistory(hist || []);
+        } catch (histErr) {
+          console.warn("Report history query:", histErr);
+          setHistory([]);
+        }
       } catch (err: any) {
-        console.error(err);
-        setError(err.message || "Kredit dosye ma'lumotlarini yuklashda xatolik yuz berdi.");
+        console.error("Credit dossier load error:", err);
+        setError(err.detail || err.message || "Kredit dosye ma'lumotlarini yuklashda xatolik yuz berdi.");
       } finally {
         setLoading(false);
       }
@@ -387,12 +393,39 @@ function CreditReportContent() {
             <p className="text-[11px] text-slate-400 mt-1">Deterministik moliyaviy dvigatel ishlamoqda</p>
           </div>
         ) : error ? (
-          <div className="p-6 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl text-xs flex items-start space-x-3">
-            <AlertCircle className="w-5 h-5 text-rose-600 flex-shrink-0" />
-            <div>
-              <p className="font-bold">Xatolik aniqlandi</p>
-              <p className="mt-1">{error}</p>
+          <div className="p-6 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl text-xs space-y-4">
+            <div className="flex items-start space-x-3">
+              <AlertCircle className="w-5 h-5 text-rose-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="font-bold text-sm">
+                  {error.toLowerCase().includes('muddati') || error.toLowerCase().includes('token') || error.toLowerCase().includes('autentifikatsiya')
+                    ? "Tizimga Kirish Talab Etiladi"
+                    : "Ma'lumot Yuklashda Xatolik"}
+                </p>
+                <p className="mt-1 text-slate-700 leading-relaxed">{error}</p>
+              </div>
             </div>
+            {(error.toLowerCase().includes('muddati') || error.toLowerCase().includes('token') || error.toLowerCase().includes('autentifikatsiya')) && (
+              <div className="pt-2 flex flex-wrap items-center gap-3 border-t border-rose-200/60">
+                <Link
+                  href={`/login?redirect=${encodeURIComponent(`/credit-report?scenario=${selectedOrgId}`)}`}
+                  className="px-4 py-2 bg-agro-700 hover:bg-agro-800 text-white rounded-lg font-bold text-xs inline-flex items-center gap-1.5 shadow-sm transition"
+                >
+                  Tizimga Qayta Kirish
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedOrgId('scenario-small-farmer');
+                    router.push('/credit-report?scenario=scenario-small-farmer');
+                  }}
+                  className="px-3.5 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-lg font-semibold text-xs transition"
+                >
+                  Sintetik Demo Korxonani Ochish
+                </button>
+              </div>
+            )}
           </div>
         ) : dossier ? (
           <>

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Sprout, Lock, Mail, ArrowRight, ShieldCheck, AlertCircle, CheckCircle, Sparkles } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from '@/lib/supabaseClient';
+import { loginAsDemoSession } from '@/lib/api';
 
 function LoginContent() {
   const router = useRouter();
@@ -68,12 +69,26 @@ function LoginContent() {
     }
   };
 
-  const handleDemoAccess = () => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('agrohisob_demo_token', 'test-token-demo');
+  const handleDemoAccess = async () => {
+    setLoading(true);
+    setErrorMsg(null);
+    try {
+      await loginAsDemoSession();
+      setSuccessMsg("Demo CFO sifatida tizimga muvaffaqiyatli kirildi! Profil: demo@agrohisob.uz. Yo'naltirilmoqda...");
+      const targetUrl = redirectUrl && redirectUrl !== '/dashboard'
+        ? redirectUrl
+        : '/dashboard?scenario=scenario-small-farmer';
+      setTimeout(() => router.push(targetUrl), 500);
+    } catch (err: any) {
+      console.error("Demo login error:", err);
+      setSuccessMsg("Sintetik Demo CFO rejimi ochilmoqda! Yo'naltirilmoqda...");
+      const targetUrl = redirectUrl && redirectUrl !== '/dashboard'
+        ? redirectUrl
+        : '/dashboard?scenario=scenario-small-farmer';
+      setTimeout(() => router.push(targetUrl), 500);
+    } finally {
+      setLoading(false);
     }
-    setSuccessMsg("Sintetik Demo CFO rejimi faollashtirildi! Sahifaga yo'naltirilmoqda...");
-    setTimeout(() => router.push(redirectUrl), 600);
   };
 
   return (

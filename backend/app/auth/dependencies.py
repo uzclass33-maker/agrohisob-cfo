@@ -68,13 +68,28 @@ def get_optional_current_user(
 ) -> Optional[AuthenticatedUser]:
     """
     Extracts authenticated user if Authorization header is present and valid.
-    If no Authorization header is provided, returns None (anonymous visitor).
-    If an Authorization header is explicitly provided but is invalid, expired, or malformed,
-    strictly raises HTTP 401 Unauthorized.
+    If no Authorization header is provided, or if the token is expired, invalid, or malformed,
+    returns None (anonymous visitor).
+    Downstream tenant authorization (verify_tenant_or_demo_read_access or verify_tenant_access)
+    authoritatively determines whether the requested resource permits anonymous read access
+    (e.g., approved synthetic demo benchmark scenarios) or strictly requires a valid session (HTTP 401).
     """
     if not authorization:
         return None
-    return get_current_user(request=request, authorization=authorization)
+
+    parts = authorization.strip().split()
+    if len(parts) != 2 or parts[0].lower() != "bearer":
+        return None
+
+    token = parts[1]
+    payload = verify_token(token)
+    if not payload:
+        return None
+
+    try:
+        return extract_user_from_payload(payload)
+    except Exception:
+        return None
 
 
 def verify_tenant_access(

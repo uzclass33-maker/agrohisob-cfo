@@ -3,6 +3,8 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabaseClient';
+import { getStoredDemoUser, logoutDemoSession } from '@/lib/api';
 import {
   Sprout,
   LayoutDashboard,
@@ -15,6 +17,7 @@ import {
   Menu,
   X,
   ArrowRight,
+  LogOut,
 } from 'lucide-react';
 
 const NAV_ITEMS = [
@@ -31,6 +34,7 @@ const NAV_ITEMS = [
 export default function Navbar() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState<{ email: string; isDemo: boolean } | null>(null);
 
   // Close the mobile panel whenever navigation happens
   useEffect(() => {
@@ -44,6 +48,58 @@ export default function Navbar() {
       document.body.style.overflow = '';
     };
   }, [open]);
+
+  // Synchronize authenticated user state (Supabase or Demo Profile)
+  useEffect(() => {
+    const syncUser = async () => {
+      try {
+        const { data } = await supabase.auth.getSession();
+        if (data?.session?.user?.email) {
+          setCurrentUser({ email: data.session.user.email, isDemo: false });
+          return;
+        }
+      } catch {}
+
+      const demoUser = getStoredDemoUser();
+      if (demoUser?.email) {
+        setCurrentUser({ email: demoUser.email, isDemo: true });
+        return;
+      }
+
+      setCurrentUser(null);
+    };
+
+    syncUser();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user?.email) {
+        setCurrentUser({ email: session.user.email, isDemo: false });
+      } else {
+        const demoUser = getStoredDemoUser();
+        if (demoUser?.email) {
+          setCurrentUser({ email: demoUser.email, isDemo: true });
+        } else {
+          setCurrentUser(null);
+        }
+      }
+    });
+
+    const handleCustomChange = () => syncUser();
+    window.addEventListener('agrohisob_auth_change', handleCustomChange);
+
+    return () => {
+      authListener?.subscription?.unsubscribe();
+      window.removeEventListener('agrohisob_auth_change', handleCustomChange);
+    };
+  }, []);
+
+  const handleLogout = async () => {
+    logoutDemoSession();
+    try {
+      await supabase.auth.signOut();
+    } catch {}
+    setCurrentUser(null);
+  };
 
   return (
     <header className="sticky top-0 z-50 border-b border-slate-200/70 bg-white/90 backdrop-blur-md">
@@ -89,12 +145,30 @@ export default function Navbar() {
 
           {/* Actions */}
           <div className="flex items-center gap-2">
-            <Link
-              href="/login"
-              className="hidden items-center justify-center rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm font-medium text-slate-700 shadow-sm transition-all duration-200 hover:border-slate-400 hover:text-navy-900 md:inline-flex"
-            >
-              Kirish
-            </Link>
+            {currentUser ? (
+              <div className="hidden items-center gap-2 md:flex">
+                <div className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs text-slate-700">
+                  <span className={`h-2 w-2 rounded-full ${currentUser.isDemo ? 'bg-amber-500' : 'bg-emerald-500'}`} />
+                  <span className="font-semibold text-slate-800 truncate max-w-[130px]">
+                    {currentUser.isDemo ? 'Demo CFO' : currentUser.email}
+                  </span>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  title="Chiqish"
+                  className="rounded-lg border border-slate-200 p-1.5 text-slate-500 hover:text-rose-700 hover:bg-rose-50 transition"
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
+              </div>
+            ) : (
+              <Link
+                href="/login"
+                className="hidden items-center justify-center rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm font-medium text-slate-700 shadow-sm transition-all duration-200 hover:border-slate-400 hover:text-navy-900 md:inline-flex"
+              >
+                Kirish
+              </Link>
+            )}
             <Link
               href="/demo"
               className="hidden items-center justify-center gap-1.5 rounded-lg bg-agro-700 px-3.5 py-2 text-xs xl:text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:bg-agro-800 hover:shadow-md active:translate-y-px sm:inline-flex"
@@ -212,12 +286,22 @@ export default function Navbar() {
             </nav>
 
             <div className="mt-4 grid grid-cols-2 gap-2 border-t border-slate-100 pt-4">
-              <Link
-                href="/login"
-                className="flex items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
-              >
-                Kirish
-              </Link>
+              {currentUser ? (
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-xs font-semibold text-rose-700 transition-colors hover:bg-rose-50"
+                >
+                  <LogOut className="h-3.5 w-3.5" />
+                  Chiqish ({currentUser.isDemo ? 'Demo' : 'Hisob'})
+                </button>
+              ) : (
+                <Link
+                  href="/login"
+                  className="flex items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+                >
+                  Kirish
+                </Link>
+              )}
               <Link
                 href="/demo"
                 className="flex items-center justify-center gap-1.5 rounded-lg bg-agro-700 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-agro-800"

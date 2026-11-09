@@ -2,8 +2,48 @@ from fastapi import APIRouter, HTTPException
 from typing import List, Dict, Any
 from app.services.synthetic_data import SCENARIOS_MAP, SCENARIO_METAS, get_scenario_by_id
 from app.services.financial_engine import FinancialEngine
+from app.auth.security import create_token
+from app.auth.models import UserRole
 
 router = APIRouter(prefix="/demo", tags=["Demo Organizations & Cash Flow"])
+
+
+@router.post("/session")
+@router.get("/session")
+def create_demo_session() -> Dict[str, Any]:
+    """
+    Issues an authoritative cryptographically-signed JWT session for Demo CFO.
+    Grants CFO / Chief Accountant privileges strictly scoped to synthetic demo organizations.
+    """
+    memberships = {
+        "scenario-small-farmer": "CFO",
+        "scenario-exporter": "CFO",
+        "scenario-cluster": "CFO",
+        "demo-org-farmer": "CFO",
+        "demo-org-fruit": "CFO",
+        "demo-org-cluster": "CFO",
+        "demo-org-agro-01": "CFO",
+    }
+    token = create_token(
+        user_id="user-demo",
+        email="demo@agrohisob.uz",
+        role=UserRole.CFO,
+        memberships=memberships,
+        expires_in_seconds=86400 * 7,  # 7 days
+    )
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+        "expires_in": 86400 * 7,
+        "user": {
+            "id": "user-demo",
+            "email": "demo@agrohisob.uz",
+            "full_name": "Demo Boshqaruvchi CFO",
+            "role": "CFO",
+            "organizations": list(memberships.keys()),
+        }
+    }
+
 
 @router.get("/organizations")
 def list_demo_organizations() -> List[Dict[str, Any]]:

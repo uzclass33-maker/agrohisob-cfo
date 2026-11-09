@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { supabase } from '@/lib/supabaseClient';
 import { 
   UploadCloud, FileSpreadsheet, CheckCircle2, Shield, 
   AlertCircle, ArrowRight, FileCheck, Layers, Info, 
@@ -12,7 +13,11 @@ import {
   commitImportBatch, 
   fetchImportHistory,
   overrideBatchRow,
-  updateBatchMapping
+  updateBatchMapping,
+  loginAsDemoSession,
+  getStoredDemoUser,
+  getAuthToken,
+  logoutDemoSession
 } from '@/lib/api';
 
 interface RowData {
@@ -95,9 +100,61 @@ export default function DataImportPage() {
   const [filterStatus, setFilterStatus] = useState<string>('ALL');
   const [commitResult, setCommitResult] = useState<any | null>(null);
   const [history, setHistory] = useState<any[]>([]);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(true);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
 
   useEffect(() => {
+    async function syncAuth() {
+      try {
+        const { data } = await supabase.auth.getSession();
+        if (data?.session?.user?.email) {
+          setIsAuthenticated(true);
+          setUserEmail(data.session.user.email);
+          return;
+        }
+      } catch {}
+
+      const demoUser = getStoredDemoUser();
+      if (demoUser?.email) {
+        setIsAuthenticated(true);
+        setUserEmail(demoUser.email);
+        return;
+      }
+
+      setIsAuthenticated(false);
+      setUserEmail(null);
+    }
+
+    syncAuth();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user?.email) {
+        setIsAuthenticated(true);
+        setUserEmail(session.user.email);
+      } else {
+        const demoUser = getStoredDemoUser();
+        if (demoUser?.email) {
+          setIsAuthenticated(true);
+          setUserEmail(demoUser.email);
+        } else {
+          setIsAuthenticated(false);
+          setUserEmail(null);
+        }
+      }
+    });
+
+    const handleCustomAuthChange = () => {
+      syncAuth();
+      loadHistory();
+    };
+    window.addEventListener('agrohisob_auth_change', handleCustomAuthChange);
+
     loadHistory();
+
+    return () => {
+      authListener?.subscription?.unsubscribe();
+      window.removeEventListener('agrohisob_auth_change', handleCustomAuthChange);
+    };
   }, []);
 
   async function loadHistory() {
@@ -109,16 +166,47 @@ export default function DataImportPage() {
     }
   }
 
+  async function handleQuickDemoLogin() {
+    setLoading(true);
+    setErrorMessage(null);
+    try {
+      const res = await loginAsDemoSession();
+      setIsAuthenticated(true);
+      setUserEmail(res.user.email);
+      await loadHistory();
+    } catch (err: any) {
+      setErrorMessage(err.message || "Demo profilga ulanishda xatolik yuz berdi.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   // Handle actual file upload
   async function handleFileUpload(file: File) {
     setLoading(true);
     setErrorMessage(null);
     setCommitResult(null);
+
+    // If not authenticated, automatically acquire demo session for demo-org-agro-01
+    const token = await getAuthToken('demo-org-agro-01');
+    if (!token) {
+      try {
+        const demoRes = await loginAsDemoSession();
+        setIsAuthenticated(true);
+        setUserEmail(demoRes.user.email);
+      } catch {}
+    }
+
     try {
       const data = await uploadImportFile(file, docType, 'demo-org-agro-01');
       setPreview(data);
     } catch (err: any) {
-      setErrorMessage(err.message || 'Faylni yuklashda xatolik yuz berdi');
+      if (err?.isSessionExpired || err?.isAuthError || err?.status === 401 || err?.message?.includes("token") || err?.message?.includes("Autentifikatsiya")) {
+        setErrorMessage("Autentifikatsiya talab etiladi: Hujjatlarni yuklash va buxgalteriya reestriga kiritish uchun Bosh buxgalter yoki Demo CFO profiliga kiring.");
+        setIsAuthenticated(false);
+      } else {
+        setErrorMessage(err.detail || err.message || 'Faylni yuklashda xatolik yuz berdi');
+      }
     } finally {
       setLoading(false);
     }
@@ -130,6 +218,16 @@ export default function DataImportPage() {
     setLoading(true);
     setErrorMessage(null);
     setCommitResult(null);
+
+    // Auto-ensure demo session if not already logged in
+    const token = await getAuthToken('demo-org-agro-01');
+    if (!token) {
+      try {
+        const demoRes = await loginAsDemoSession();
+        setIsAuthenticated(true);
+        setUserEmail(demoRes.user.email);
+      } catch {}
+    }
 
     try {
       let file: File;
@@ -267,13 +365,98 @@ export default function DataImportPage() {
           </div>
         </div>
 
+        {/* Authenticated User Status */}
+        {isAuthenticated && userEmail && (
+          <div className="bg-emerald-50 border border-emerald-200 p-3.5 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-emerald-900 text-xs">
+            <div className="flex items-center space-x-2">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span>
+                Faol hisob: <strong>{userEmail}</strong>
+                {userEmail === 'demo@agrohisob.uz' && (
+                  <span className="ml-2 px-2 py-0.5 rounded-full text-[10px] font-bold bg-agro-100 text-agro-800 border border-agro-300">
+                    DEMO CFO PROFILI
+                  </span>
+                )}
+              </span>
+            </div>
+            {userEmail === 'demo@agrohisob.uz' && (
+              <button
+                type="button"
+                onClick={() => {
+                  logoutDemoSession();
+                  setIsAuthenticated(false);
+                  setUserEmail(null);
+                }}
+                className="px-2.5 py-1 text-[11px] font-semibold text-slate-600 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition"
+              >
+                Chiqish
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Unauthenticated Security Notice */}
+        {!isAuthenticated && (
+          <div className="bg-amber-50 border border-amber-200 p-4 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-amber-900">
+            <div className="flex items-start space-x-3">
+              <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+              <div>
+                <p className="font-bold text-xs uppercase tracking-wide text-amber-800">Autentifikatsiya Talab Etiladi</p>
+                <p className="text-xs text-amber-800 mt-0.5">
+                  Bank ko&apos;chirmasi va Soliq E-Faktura fayllarini import qilish hamda buxgalteriya reestrlariga yozish uchun Bosh buxgalter yoki Demo CFO profiliga kiring.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={handleQuickDemoLogin}
+                disabled={loading}
+                className="px-3.5 py-1.5 bg-agro-700 hover:bg-agro-800 text-white rounded-lg text-xs font-bold inline-flex items-center gap-1 shadow-sm transition"
+              >
+                Demo Profil Bilan Kirish
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+              <Link
+                href="/login?redirect=/data-import"
+                className="px-3.5 py-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-semibold inline-flex items-center gap-1 shadow-sm transition"
+              >
+                Tizimga Kirish
+              </Link>
+            </div>
+          </div>
+        )}
+
         {/* Error notification */}
         {errorMessage && (
-          <div className="bg-rose-50 border border-rose-200 p-4 rounded-xl flex items-start space-x-3 text-rose-800 text-sm">
-            <AlertCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
-            <div>
-              <p className="font-semibold">Xatolik yuz berdi</p>
-              <p className="text-xs text-rose-700 mt-0.5">{errorMessage}</p>
+          <div className="bg-rose-50 border border-rose-200 p-4 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-rose-800 text-sm">
+            <div className="flex items-start space-x-3">
+              <AlertCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+              <div>
+                <p className="font-semibold text-xs uppercase tracking-wide text-rose-900">
+                  {errorMessage.toLowerCase().includes('autentifikatsiya') || errorMessage.toLowerCase().includes('token')
+                    ? "Ruxsat Cheklangan"
+                    : "Xatolik Yuz Berdi"}
+                </p>
+                <p className="text-xs text-rose-700 mt-0.5">{errorMessage}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={handleQuickDemoLogin}
+                disabled={loading}
+                className="px-3.5 py-1.5 bg-agro-700 hover:bg-agro-800 text-white rounded-lg text-xs font-bold inline-flex items-center gap-1 shadow-sm transition"
+              >
+                Demo Profil Bilan Kirish
+              </button>
+              <Link
+                href="/login?redirect=/data-import"
+                className="px-3.5 py-1.5 bg-white border border-rose-300 hover:bg-rose-100/50 text-rose-800 rounded-lg text-xs font-semibold inline-flex items-center gap-1 shadow-sm transition"
+              >
+                Kirish Sahifasi
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
             </div>
           </div>
         )}
@@ -406,7 +589,7 @@ export default function DataImportPage() {
                     <p className="font-bold text-slate-800 truncate mt-0.5">{m.source_header}</p>
                     <div className="flex items-center space-x-1 mt-1 text-[10px] text-emerald-700 font-medium">
                       <Check className="w-3 h-3" />
-                      <span>{(m.confidence * 100).toFixed(0)}% moslik</span>
+                      <span>{(Number(m.confidence || 0) * 100).toFixed(0)}% moslik</span>
                     </div>
                   </div>
                 ))}

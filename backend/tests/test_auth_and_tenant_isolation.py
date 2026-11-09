@@ -262,3 +262,117 @@ def test_storage_directory_isolation():
         default_research = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "storage", "research")
         set_analytics_storage_dir(default_analytics)
         set_research_storage_dir(default_research)
+
+
+# -----------------------------------------------------------------------------
+# 6. Session Reliability & Expired/Stale Token Handling
+# -----------------------------------------------------------------------------
+
+def test_expired_token_is_strictly_rejected_on_private_endpoints():
+    """Verifies that expired JWTs are rejected with HTTP 401 on private customer endpoints."""
+    expired_token = create_token(
+        user_id="user-cfo-org2",
+        email="cfo@zarafshon.uz",
+        role=UserRole.CFO,
+        memberships={"org-zarafshon-02": "CFO"},
+        expires_in_seconds=-3600  # Expired 1 hour ago
+    )
+    headers = {"Authorization": f"Bearer {expired_token}"}
+
+    res_overview = client.get("/api/v1/dashboard/overview?organization_id=org-zarafshon-02", headers=headers)
+    assert res_overview.status_code == 401
+    assert "Autentifikatsiya talab etiladi" in res_overview.json().get("detail", "") or "token" in res_overview.json().get("detail", "").lower()
+
+    res_history = client.get("/api/v1/reports/history?organization_id=org-zarafshon-02", headers=headers)
+    assert res_history.status_code == 401
+
+    res_imports = client.get("/api/v1/imports/history/list", headers=headers)
+    assert res_imports.status_code == 401
+
+
+def test_expired_or_stale_token_does_not_break_synthetic_demo_reads():
+    """
+    Verifies that a visitor who has an expired or stale token in their browser
+    can still cleanly view the three approved synthetic demo scenarios without errors.
+    """
+    expired_token = create_token(
+        user_id="user-old",
+        email="old@agrohisob.uz",
+        expires_in_seconds=-86400  # Expired 1 day ago
+    )
+    stale_headers = {"Authorization": f"Bearer {expired_token}"}
+
+    demo_scenarios = ["scenario-small-farmer", "scenario-exporter", "scenario-cluster"]
+    for s_id in demo_scenarios:
+        # Overview
+        res_ov = client.get(f"/api/v1/dashboard/overview?organization_id={s_id}", headers=stale_headers)
+        assert res_ov.status_code == 200, f"Overview for {s_id} with expired token must return 200, got {res_ov.status_code}"
+        assert res_ov.json()["is_synthetic"] is True
+
+        # Cashflow
+        res_cf = client.get(f"/api/v1/dashboard/cashflow?organization_id={s_id}", headers=stale_headers)
+        assert res_cf.status_code == 200
+
+        # Forecast
+        res_fc = client.get(f"/api/v1/dashboard/forecast?organization_id={s_id}", headers=stale_headers)
+        assert res_fc.status_code == 200
+
+        # Report history
+        res_hist = client.get(f"/api/v1/reports/history?organization_id={s_id}", headers=stale_headers)
+        assert res_hist.status_code == 200
+
+
+def test_anonymous_access_to_non_demo_org_is_strictly_rejected():
+    """Verifies that non-allowlisted organization IDs cannot be accessed anonymously."""
+    non_demo_orgs = [
+        "org-unknown-customer",
+        "org-bogdor-01",
+        "org-zarafshon-02",
+        "secret-corp-99"
+    ]
+    for org_id in non_demo_orgs:
+        res = client.get(f"/api/v1/dashboard/overview?organization_id={org_id}", headers={})
+        assert res.status_code == 401, f"Anonymous access to {org_id} must return 401, got {res.status_code}"
+
+
+def test_file_imports_strictly_require_valid_authenticated_accountant_or_cfo():
+    """Verifies that file imports cannot be accessed anonymously or with invalid/expired tokens."""
+    import io
+    csv_bytes = b"Sana;Debet;Kredit;Kontragent;INN;Hujjat raqami;To'lov maqsadi\n2026-03-12;1000000;;Test;200115542;101;Test purpose"
+    files = {"file": ("statement.csv", io.BytesIO(csv_bytes), "text/csv")}
+    data = {"document_type": "BANK_STATEMENT", "organization_id": "demo-org-fruit"}
+
+    # 1. Anonymous upload -> 401
+    res_anon = client.post("/api/v1/imports/upload", files=files, data=data, headers={})
+    assert res_anon.status_code == 401
+
+    # 2. Expired token upload -> 401
+    expired_token = create_token("u1", "cfo@bogdor.uz", role=UserRole.CFO, expires_in_seconds=-60)
+    files_exp = {"file": ("statement.csv", io.BytesIO(csv_bytes), "text/csv")}
+    res_exp = client.post("/api/v1/imports/upload", files=files_exp, data=data, headers={"Authorization": f"Bearer {expired_token}"})
+    assert res_exp.status_code == 401
+
+    # 3. Cross-tenant upload (user from org2 trying to upload to org-bogdor-01) -> 403
+    files_cross = {"file": ("statement.csv", io.BytesIO(csv_bytes), "text/csv")}
+    cross_data = {"document_type": "BANK_STATEMENT", "organization_id": "org-bogdor-01"}
+    res_cross = client.post("/api/v1/imports/upload", files=files_cross, data=cross_data, headers={"Authorization": "Bearer test-token-cfo-org2"})
+    assert res_cross.status_code == 403
+
+
+def test_valid_custom_signed_jwt_respects_tenant_isolation():
+    """Verifies that a validly signed JWT is authorized only for its granted organizations."""
+    valid_token = create_token(
+        user_id="user-custom-cfo",
+        email="custom@agro.uz",
+        role=UserRole.CFO,
+        memberships={"org-custom-agro": "CFO"}
+    )
+    headers = {"Authorization": f"Bearer {valid_token}"}
+
+    # Access authorized org -> 200 OK
+    res_auth = client.get("/api/v1/dashboard/overview?organization_id=org-custom-agro", headers=headers)
+    assert res_auth.status_code == 200
+
+    # Access unauthorized other private tenant -> 403 Forbidden
+    res_unauth = client.get("/api/v1/dashboard/overview?organization_id=org-zarafshon-02", headers=headers)
+    assert res_unauth.status_code == 403
