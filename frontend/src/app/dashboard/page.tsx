@@ -33,10 +33,55 @@ import {
   ArrowUpRight, ArrowDownRight, RefreshCw, Sliders, ShieldCheck, 
   DollarSign, Calendar, AlertOctagon, TrendingUp, TrendingDown, Info,
   BrainCircuit, Sparkles, ShieldAlert, Cpu, BarChart3, Layers, 
-  FileText, ArrowRight, Gauge, Activity, Database, Lock
+  FileText, ArrowRight, Gauge, Activity, Database, Lock, X, ChevronRight, User
 } from 'lucide-react';
+import { supabase } from '@/lib/supabaseClient';
 
 type TabType = 'overview' | 'cashflow' | 'forecast' | 'debt' | 'risks' | 'scenarios' | 'ai_cfo';
+
+interface DemoCompanyOption {
+  id: string;
+  name: string;
+  type: string;
+  hectares: string;
+  crop: string;
+  dynamics: string;
+  accent: string;
+  icon: React.ComponentType<{ className?: string }>;
+}
+
+const SYNTHETIC_DEMO_COMPANIES: DemoCompanyOption[] = [
+  {
+    id: 'scenario-small-farmer',
+    name: 'Andijon Baraka FX',
+    type: 'Kichik Tijoriy Fermer',
+    hectares: '65 ga',
+    crop: "Sabzavot va G'alla",
+    dynamics: "Bahorgi ekishda kassa uzilishi (May oyi), yillik DSCR 1.34x",
+    accent: 'border-harvest-200 bg-harvest-50/50 text-harvest-800',
+    icon: Wheat,
+  },
+  {
+    id: 'scenario-exporter',
+    name: '«Samarqand Agro Eksport» MChJ',
+    type: 'Meva-Sabzavot Eksportyori',
+    hectares: '120 ga',
+    crop: "Intensiv bog' & Sovutgichli ombor",
+    dynamics: "Muntazam eksport valyuta tushumi, yuqori likvidlik, DSCR 1.82x",
+    accent: 'border-sky-200 bg-sky-50/50 text-sky-800',
+    icon: Truck,
+  },
+  {
+    id: 'scenario-cluster',
+    name: '«Qashqadaryo Paxta-G\'alla Klasteri»',
+    type: 'Yirik Agrosanoat Klasteri',
+    hectares: '2 500 ga',
+    crop: "Paxta, g'alla va chuqur qayta ishlash",
+    dynamics: "19.8 mlrd so'm qarz yuki, katta aylanma hajm, DSCR 1.15x",
+    accent: 'border-agro-200 bg-agro-50/50 text-agro-800',
+    icon: Building2,
+  },
+];
 
 function DashboardContent() {
   const searchParams = useSearchParams();
@@ -69,13 +114,34 @@ function DashboardContent() {
   // Status & Loading
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [errorType, setErrorType] = useState<'AUTH_REQUIRED' | 'FORBIDDEN' | 'NETWORK_COLD_START' | 'GENERIC' | null>(null);
+  const [errorType, setErrorType] = useState<
+    'AUTH_REQUIRED' | 'FORBIDDEN' | 'EXPIRED_SESSION' | 'API_UNAVAILABLE' | 'DEMO_LOAD_ERROR' | 'GENERIC' | null
+  >(null);
   const [coldStartNotice, setColdStartNotice] = useState<boolean>(false);
   const [llmRequested, setLlmRequested] = useState<boolean>(false);
   const [llmLoading, setLlmLoading] = useState<boolean>(false);
+  const [currentUserEmail, setCurrentUserEmail] = useState<string | null>(null);
+  const [isDemoModalOpen, setIsDemoModalOpen] = useState<boolean>(false);
 
   // Cashflow category filter
   const [cfFilter, setCfFilter] = useState<'ALL' | 'INFLOWS' | 'OUTFLOWS'>('ALL');
+
+  // Track active Supabase session
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      if (data?.session?.user?.email) {
+        setCurrentUserEmail(data.session.user.email);
+      }
+    }).catch(() => {});
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setCurrentUserEmail(session?.user?.email || null);
+    });
+
+    return () => {
+      authListener?.subscription?.unsubscribe();
+    };
+  }, []);
 
   // Load scenarios metadata
   useEffect(() => {
@@ -95,6 +161,10 @@ function DashboardContent() {
     const fromParam = searchParams.get('scenario');
     if (fromParam && fromParam !== selectedOrgId) {
       setSelectedOrgId(fromParam);
+    }
+    const tabParam = searchParams.get('tab') as TabType;
+    if (tabParam && ['overview', 'cashflow', 'forecast', 'debt', 'risks', 'scenarios', 'ai_cfo'].includes(tabParam)) {
+      setActiveTab(tabParam);
     }
   }, [searchParams]);
 
@@ -145,19 +215,27 @@ function DashboardContent() {
 
     } catch (err: any) {
       console.error("Dashboard data load error:", err);
+      const isExpired = err?.isSessionExpired || err?.message?.toLowerCase()?.includes("muddati") || err?.message?.toLowerCase()?.includes("expired");
       const isAuth = err?.isAuthError || err?.status === 401 || err?.message?.includes("Autentifikatsiya") || err?.message?.includes("401");
       const isForbid = err?.isForbidden || err?.status === 403 || err?.message?.includes("Tashkilotlararo") || err?.message?.includes("403");
-      const isNet = err?.message?.includes("fetch") || err?.message?.includes("NetworkError") || err?.message?.includes("Failed to fetch") || err?.message?.includes("aborted");
+      const isNet = err?.isNetworkError || err?.status === 0 || err?.status >= 502 || err?.message?.includes("fetch") || err?.message?.includes("NetworkError") || err?.message?.includes("Failed to fetch") || err?.message?.includes("aborted");
+      const isDemoOrg = orgId.startsWith('scenario-') || orgId.startsWith('demo-');
 
-      if (isAuth) {
+      if (isExpired) {
+        setErrorType('EXPIRED_SESSION');
+        setError("Sessiya muddati tugadi: Xavfsizlik talablariga muvofiq, tizimga qayta kirishingiz lozim.");
+      } else if (isAuth) {
         setErrorType('AUTH_REQUIRED');
-        setError("Tizimga kirish talab etiladi: Ushbu tashkilot ma'lumotlarini ko'rish uchun avtorizatsiyadan o'ting yoki demo rejimiga o'ting.");
+        setError("Autentifikatsiya talab etiladi: Haqiqiy korxona ma'lumotlariga kirish uchun tizimga kiring yoki quyidagi 3 ta sintetik demo korxonani erkin ko'ring.");
       } else if (isForbid) {
         setErrorType('FORBIDDEN');
         setError(err.detail || err.message || "Tashkilotlararo ruxsat cheklangan (403): Ushbu korxona ma'lumotlariga faqat vakolatli xodimlar kira oladi.");
       } else if (isNet) {
-        setErrorType('NETWORK_COLD_START');
-        setError("Server bilan aloqa o'rnatilmadi: Render bepul serveri uyg'onish holatida bo'lishi mumkin. Iltimos, qayta yuklang.");
+        setErrorType('API_UNAVAILABLE');
+        setError("Server bilan aloqa o'rnatilmadi: Render bepul bulutli serveri uyg'onish holatida yoki internet aloqasida uzilish mavjud. Iltimos, qayta urinib ko'ring.");
+      } else if (isDemoOrg) {
+        setErrorType('DEMO_LOAD_ERROR');
+        setError(err.detail || err.message || "Sintetik demo ma'lumotlarini yuklashda xatolik yuz berdi. Iltimos, quyidagi boshqa demo korxonani tanlang.");
       } else {
         setErrorType('GENERIC');
         setError(err.detail || err.message || "Boshqaruv paneli ma'lumotlarini yuklashda kutilmagan xatolik yuz berdi.");
@@ -305,13 +383,13 @@ function DashboardContent() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
         
         {/* Top Control Bar: Organization Switcher & Meta */}
-        <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-card flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-card flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
           <div className="flex items-center space-x-3">
-            <div className="p-2.5 bg-agro-50 text-agro-700 rounded-lg border border-agro-100">
+            <div className="p-2.5 bg-agro-50 text-agro-700 rounded-lg border border-agro-100 shrink-0">
               <Building2 className="w-6 h-6" />
             </div>
             <div>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center flex-wrap gap-1.5">
                 <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Korxona:</span>
                 {overview && (
                   <span className={`px-2 py-0.5 rounded text-[11px] font-semibold border ${
@@ -319,54 +397,62 @@ function DashboardContent() {
                       ? 'bg-navy-50 text-navy-700 border-navy-200' 
                       : 'bg-agro-50 text-agro-700 border-agro-200'
                   }`}>
-                    {overview.data_source === 'BANK_STATEMENT_IMPORT' ? 'Bank Ko\'chirmasi (Haqiqiy)' : 'Sintetik Benchmark'}
+                    {overview.data_source === 'BANK_STATEMENT_IMPORT' ? "Bank Ko'chirmasi (Haqiqiy)" : 'Sintetik Benchmark'}
+                  </span>
+                )}
+                {currentUserEmail && (
+                  <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-700 border border-slate-200 flex items-center gap-1">
+                    <User className="w-3 h-3 text-slate-500" />
+                    {currentUserEmail}
                   </span>
                 )}
               </div>
-              <h2 className="text-lg font-bold text-slate-900">
-                {overview ? overview.organization_name : "Yuklanmoqda..."}
+              <h2 className="text-lg font-bold text-slate-900 leading-snug">
+                {overview ? overview.organization_name : (loading ? "Yuklanmoqda..." : selectedOrgId)}
               </h2>
             </div>
           </div>
 
-          {/* Org Selector Buttons */}
-          <div className="flex items-center space-x-1.5 p-1 bg-slate-100 rounded-xl">
+          {/* 3-Company Demo Selector Strip */}
+          <div className="flex items-center flex-wrap gap-1.5 p-1 bg-slate-100/90 rounded-xl border border-slate-200/60">
+            <span className="text-[11px] font-bold text-slate-500 px-2 uppercase tracking-wider hidden sm:inline">
+              Demo:
+            </span>
+            {SYNTHETIC_DEMO_COMPANIES.map((company) => {
+              const Icon = company.icon;
+              const isSelected = selectedOrgId === company.id;
+              return (
+                <button
+                  key={company.id}
+                  onClick={() => handleOrgChange(company.id)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                    isSelected
+                      ? 'bg-navy-900 text-white shadow-card'
+                      : 'text-slate-600 hover:text-navy-900 hover:bg-white/80'
+                  }`}
+                  title={`${company.name} (${company.hectares})`}
+                >
+                  <Icon className={`w-3.5 h-3.5 ${isSelected ? 'text-agro-400' : 'text-slate-400'}`} />
+                  <span>{company.name.split(' ')[0]}</span>
+                  <span className={`text-[10px] ${isSelected ? 'text-slate-300' : 'text-slate-400'}`}>
+                    ({company.hectares})
+                  </span>
+                </button>
+              );
+            })}
             <button
-              onClick={() => handleOrgChange('scenario-small-farmer')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                selectedOrgId.includes('farmer')
-                  ? 'bg-navy-900 text-white shadow-card'
-                  : 'text-slate-600 hover:text-navy-900'
-              }`}
+              onClick={() => setIsDemoModalOpen(true)}
+              className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-agro-700 hover:bg-agro-50 hover:text-agro-900 border border-transparent hover:border-agro-200 transition"
+              title="3 ta demo korxona tavsifini ko'rish"
             >
-              Fermer (65 ga)
-            </button>
-            <button
-              onClick={() => handleOrgChange('scenario-exporter')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                selectedOrgId.includes('exporter')
-                  ? 'bg-navy-900 text-white shadow-card'
-                  : 'text-slate-600 hover:text-navy-900'
-              }`}
-            >
-              Eksportyor (120 ga)
-            </button>
-            <button
-              onClick={() => handleOrgChange('scenario-cluster')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                selectedOrgId.includes('cluster')
-                  ? 'bg-navy-900 text-white shadow-card'
-                  : 'text-slate-600 hover:text-navy-900'
-              }`}
-            >
-              Klaster (2 500 ga)
+              Tanlash...
             </button>
           </div>
 
-          {/* Quick Refresh */}
-          <div className="flex items-center space-x-3 text-xs text-slate-500">
-            <span>Valyuta: <strong>UZS</strong></span>
-            <span>Davr: <strong>2026</strong></span>
+          {/* Quick Refresh & Meta */}
+          <div className="flex items-center justify-between lg:justify-end space-x-3 text-xs text-slate-500 pt-2 lg:pt-0 border-t lg:border-t-0 border-slate-100">
+            <span className="hidden sm:inline">Valyuta: <strong>UZS</strong></span>
+            <span className="hidden sm:inline">Davr: <strong>2026</strong></span>
             <button
               onClick={() => loadDashboardData(selectedOrgId)}
               disabled={loading}
@@ -378,9 +464,9 @@ function DashboardContent() {
           </div>
         </div>
 
-        {/* 7-Module Navigation Tabs */}
-        <div className="bg-white rounded-xl border border-slate-200/80 p-1.5 shadow-card overflow-x-auto">
-          <div className="flex items-center space-x-1 min-w-[760px]">
+        {/* 7-Module Navigation Tabs (Sticky & Fully Visible) */}
+        <div className="sticky top-16 z-20 bg-white/95 backdrop-blur-md rounded-xl border border-slate-200/90 p-1.5 shadow-sm overflow-x-auto no-scrollbar">
+          <div className="flex items-center gap-1 min-w-max">
             {[
               { id: 'overview', label: '1. Ijroiya Xulosa', icon: Activity },
               { id: 'cashflow', label: '2. Kassa Oqimlari', icon: DollarSign },
@@ -396,7 +482,7 @@ function DashboardContent() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as TabType)}
-                  className={`flex items-center space-x-2 px-3.5 py-2.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ${
+                  className={`flex items-center space-x-2 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ${
                     isActive
                       ? 'bg-navy-900 text-white shadow-card'
                       : tab.highlight
@@ -421,20 +507,101 @@ function DashboardContent() {
 
         {/* Synthetic Demo Mode Notice Banner */}
         {selectedOrgId.startsWith('scenario-') && (
-          <div className="bg-agro-50 border border-agro-200 text-agro-900 px-4 py-3 rounded-xl flex items-center justify-between text-xs">
+          <div className="bg-agro-50/90 border border-agro-200 text-agro-900 px-4 py-3 rounded-xl flex items-center justify-between text-xs gap-3">
             <div className="flex items-center space-x-2">
-              <Sparkles className="w-4 h-4 text-agro-700 flex-shrink-0" />
+              <Sparkles className="w-4 h-4 text-agro-700 shrink-0" />
               <span>
-                <strong>Sintetik Benchmark Rejimi:</strong> Siz hozir ochiq agrobiznes benchmark ssenariysini tahlil qilmoqdasiz. O'z korxonangiz soliq va bank fayllarini yuklash uchun{' '}
+                <strong>Sintetik Demo Rejimi:</strong> Siz hozir ro'yxatdan o'tmasdan ochiq sintetik benchmark korxonasini tahlil qilmoqdasiz. Haqiqiy korxonangiz 1C/Didox hujjatlarini yuklash uchun{' '}
                 <Link href="/data-import" className="underline font-bold text-agro-800 hover:text-agro-950">
                   Fayl Yuklash
                 </Link>{' '}
                 bo'limiga o'ting.
               </span>
             </div>
-            <span className="hidden md:inline px-2 py-0.5 rounded bg-agro-100 text-agro-800 font-semibold text-[10px]">
-              Ochiq Ko'rish Rejimi
-            </span>
+            <button
+              onClick={() => setIsDemoModalOpen(true)}
+              className="shrink-0 px-2.5 py-1 rounded bg-agro-100 hover:bg-agro-200 text-agro-800 font-semibold text-[11px] transition"
+            >
+              Boshqa demo tanlash
+            </button>
+          </div>
+        )}
+
+        {/* Modal: 3 Synthetic Demo Companies Selector */}
+        {isDemoModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
+            <div className="bg-white w-full max-w-2xl rounded-2xl border border-slate-200 shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+              <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4 bg-slate-50/80">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-agro-700" />
+                  <h3 className="text-base font-bold text-navy-950">Sintetik Demo Korxonasini Tanlang</h3>
+                </div>
+                <button
+                  onClick={() => setIsDemoModalOpen(false)}
+                  className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition"
+                  aria-label="Yopish"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="p-6 space-y-3 max-h-[75vh] overflow-y-auto">
+                <p className="text-xs text-slate-600 mb-2">
+                  Ro'yxatdan o'tish yoki tizimga kirish talab etilmaydi. Quyidagi 3 ta sintetik agrobiznes profilidan birini tanlab, uning to'liq moliyaviy panelini ko'rishingiz mumkin:
+                </p>
+
+                {SYNTHETIC_DEMO_COMPANIES.map((company) => {
+                  const Icon = company.icon;
+                  const isCurrent = selectedOrgId === company.id;
+                  return (
+                    <button
+                      key={company.id}
+                      onClick={() => {
+                        handleOrgChange(company.id);
+                        setIsDemoModalOpen(false);
+                      }}
+                      className={`w-full text-left p-4 rounded-xl border transition-all flex items-start justify-between gap-3 ${
+                        isCurrent
+                          ? 'border-agro-500 bg-agro-50/60 shadow-sm ring-1 ring-agro-500'
+                          : 'border-slate-200 hover:border-agro-300 hover:bg-slate-50/80'
+                      }`}
+                    >
+                      <div className="flex items-start gap-3.5">
+                        <span className={`p-2.5 rounded-xl border shrink-0 ${company.accent}`}>
+                          <Icon className="w-5 h-5" />
+                        </span>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h4 className="text-sm font-bold text-navy-900">{company.name}</h4>
+                            <span className="text-[11px] font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
+                              {company.hectares}
+                            </span>
+                            {isCurrent && (
+                              <span className="text-[10px] font-bold text-agro-700 bg-agro-100 px-2 py-0.5 rounded">
+                                Joriy tanlangan
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-slate-600 font-medium mt-0.5">{company.type} &bull; {company.crop}</p>
+                          <p className="text-xs text-slate-500 mt-1 leading-relaxed">{company.dynamics}</p>
+                        </div>
+                      </div>
+                      <ChevronRight className="w-5 h-5 text-slate-400 shrink-0 self-center" />
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="border-t border-slate-100 px-6 py-3 bg-slate-50 flex items-center justify-between text-xs text-slate-500">
+                <span>Ma'lumotlar turi: Ochiq sintetik benchmark</span>
+                <button
+                  onClick={() => setIsDemoModalOpen(false)}
+                  className="px-4 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 font-semibold"
+                >
+                  Yopish
+                </button>
+              </div>
+            </div>
           </div>
         )}
 
@@ -463,17 +630,44 @@ function DashboardContent() {
 
         {/* Error States */}
         {!loading && error && (
-          <div>
+          <div className="space-y-4">
             {errorType === 'AUTH_REQUIRED' ? (
-              <div className="bg-white p-8 sm:p-12 rounded-xl border border-amber-200/80 shadow-card text-center max-w-xl mx-auto space-y-4">
-                <div className="w-14 h-14 bg-amber-100 text-amber-700 rounded-xl flex items-center justify-center mx-auto">
+              <div className="bg-white p-6 sm:p-10 rounded-2xl border border-amber-200 shadow-card text-center max-w-2xl mx-auto space-y-5">
+                <div className="w-14 h-14 bg-amber-100 text-amber-700 rounded-2xl flex items-center justify-center mx-auto shadow-sm">
                   <Lock className="w-7 h-7" />
                 </div>
-                <h3 className="num text-xl font-bold tracking-tight text-slate-900">Autentifikatsiya Talab Qilinadi</h3>
-                <p className="text-sm text-slate-600">
-                  Ushbu korxona (<span className="font-semibold text-slate-800">{selectedOrgId}</span>) ma'lumotlarini ko'rish uchun tizimga kiring yoki ochiq sintetik demo rejimiga o'ting.
-                </p>
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+                <div>
+                  <h3 className="text-xl font-bold tracking-tight text-slate-900">Autentifikatsiya Talab Qilinadi</h3>
+                  <p className="text-sm text-slate-600 mt-2 max-w-lg mx-auto">
+                    Ushbu korxona (<span className="font-semibold text-slate-800">{selectedOrgId}</span>) shaxsiy mijoz ma'lumotlari hisoblanadi va tenant xavfsizligi bilan himoyalangan. Tizimga kiring yoki quyidagi <strong className="text-slate-900">3 ta sintetik demo korxonani ro'yxatdan o'tmasdan</strong> erkin ko'ring:
+                  </p>
+                </div>
+
+                {/* 3 Synthetic Demo Company Cards embedded directly in Auth Error */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-left pt-2">
+                  {SYNTHETIC_DEMO_COMPANIES.map((company) => {
+                    const Icon = company.icon;
+                    return (
+                      <button
+                        key={company.id}
+                        onClick={() => handleOrgChange(company.id)}
+                        className="p-3 rounded-xl border border-slate-200 hover:border-agro-500 hover:bg-agro-50/50 transition group flex flex-col justify-between"
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <Icon className="w-4 h-4 text-agro-700" />
+                          <span className="text-[10px] font-semibold text-slate-500">{company.hectares}</span>
+                        </div>
+                        <h4 className="text-xs font-bold text-slate-900 group-hover:text-agro-800">{company.name}</h4>
+                        <span className="text-[10px] text-slate-500 mt-1">{company.type}</span>
+                        <span className="mt-2 text-[10px] font-semibold text-agro-700 flex items-center gap-1">
+                          Demoni ochish <ArrowRight className="w-3 h-3" />
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
                   <Link
                     href={`/login?redirect=${encodeURIComponent(`/dashboard?scenario=${selectedOrgId}`)}`}
                     className="w-full sm:w-auto inline-flex items-center justify-center px-5 py-2.5 rounded-xl bg-agro-700 hover:bg-agro-800 text-white font-semibold text-sm shadow transition"
@@ -485,16 +679,40 @@ function DashboardContent() {
                     onClick={() => handleOrgChange('scenario-small-farmer')}
                     className="w-full sm:w-auto inline-flex items-center justify-center px-5 py-2.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-sm transition"
                   >
-                    Demo Korxonasini Ko'rish
+                    Standart Demo Fermer (65 ga)
+                  </button>
+                </div>
+              </div>
+            ) : errorType === 'EXPIRED_SESSION' ? (
+              <div className="bg-white p-6 sm:p-10 rounded-2xl border border-amber-200 shadow-card text-center max-w-xl mx-auto space-y-4">
+                <div className="w-14 h-14 bg-amber-100 text-amber-700 rounded-2xl flex items-center justify-center mx-auto shadow-sm">
+                  <Lock className="w-7 h-7" />
+                </div>
+                <h3 className="text-xl font-bold tracking-tight text-slate-900">Sessiya Muddati Tugadi</h3>
+                <p className="text-sm text-slate-600">
+                  Xavfsizlik talablariga muvofiq autentifikatsiya tokeningiz muddati yakunlandi. Iltimos, hisobingizga qayta kiring yoki demo korxonalarni ko'ring.
+                </p>
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+                  <Link
+                    href={`/login?redirect=${encodeURIComponent(`/dashboard?scenario=${selectedOrgId}`)}`}
+                    className="w-full sm:w-auto inline-flex items-center justify-center px-5 py-2.5 rounded-xl bg-agro-700 hover:bg-agro-800 text-white font-semibold text-sm shadow transition"
+                  >
+                    Qayta Tizimga Kirish
+                  </Link>
+                  <button
+                    onClick={() => handleOrgChange('scenario-small-farmer')}
+                    className="w-full sm:w-auto inline-flex items-center justify-center px-5 py-2.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-sm transition"
+                  >
+                    Demo Korxonasiga O'tish
                   </button>
                 </div>
               </div>
             ) : errorType === 'FORBIDDEN' ? (
-              <div className="bg-white p-8 sm:p-12 rounded-xl border border-rose-200/80 shadow-card text-center max-w-xl mx-auto space-y-4">
-                <div className="w-14 h-14 bg-rose-100 text-rose-700 rounded-xl flex items-center justify-center mx-auto">
+              <div className="bg-white p-6 sm:p-10 rounded-2xl border border-rose-200 shadow-card text-center max-w-xl mx-auto space-y-4">
+                <div className="w-14 h-14 bg-rose-100 text-rose-700 rounded-2xl flex items-center justify-center mx-auto shadow-sm">
                   <ShieldAlert className="w-7 h-7" />
                 </div>
-                <h3 className="num text-xl font-bold tracking-tight text-slate-900">Ruxsat Cheklangan (403 Forbidden)</h3>
+                <h3 className="text-xl font-bold tracking-tight text-slate-900">Ruxsat Cheklangan (403 Forbidden)</h3>
                 <p className="text-sm text-slate-600">
                   Sizning hisobingiz ushbu korxona (<span className="font-semibold text-slate-800">{selectedOrgId}</span>) moliyaviy ma'lumotlariga kirish huquqiga ega emas. Platformada tashkilotlararo ma'lumotlar xavfsizligi va tenant izolyatsiyasi to'liq ta'minlangan.
                 </p>
@@ -505,18 +723,24 @@ function DashboardContent() {
                   >
                     Demo Korxonasiga Qaytish
                   </button>
+                  <button
+                    onClick={() => setIsDemoModalOpen(true)}
+                    className="w-full sm:w-auto inline-flex items-center justify-center px-5 py-2.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-sm transition"
+                  >
+                    Boshqa Demo Tanlash
+                  </button>
                 </div>
               </div>
-            ) : errorType === 'NETWORK_COLD_START' ? (
-              <div className="bg-white p-8 sm:p-12 rounded-xl border border-sky-200/80 shadow-card text-center max-w-xl mx-auto space-y-4">
-                <div className="w-14 h-14 bg-sky-100 text-sky-700 rounded-xl flex items-center justify-center mx-auto">
+            ) : errorType === 'API_UNAVAILABLE' ? (
+              <div className="bg-white p-6 sm:p-10 rounded-2xl border border-sky-200 shadow-card text-center max-w-xl mx-auto space-y-4">
+                <div className="w-14 h-14 bg-sky-100 text-sky-700 rounded-2xl flex items-center justify-center mx-auto shadow-sm">
                   <RefreshCw className="w-7 h-7" />
                 </div>
-                <h3 className="num text-xl font-bold tracking-tight text-slate-900">Server Uyg'onmoqda yoki Aloqa Uzildi</h3>
+                <h3 className="text-xl font-bold tracking-tight text-slate-900">Server Bilan Aloqa O'rnatilmadi</h3>
                 <p className="text-sm text-slate-600">
-                  Render bepul bulutli serveri uzoq harakatsizlikdan so'ng 'uyqu' holatidan qaytmoqda yoki tarmoq sekinlashgan. Iltimos, quyidagi tugmani bosib qayta yuklang.
+                  Bulutli backend serveri uyg'onish jarayonida yoki tarmoqda uzilish yuz berdi. Iltimos, quyidagi tugmani bosib qayta urinib ko'ring.
                 </p>
-                <div className="pt-2">
+                <div className="pt-2 flex items-center justify-center gap-3">
                   <button
                     onClick={() => loadDashboardData(selectedOrgId)}
                     className="inline-flex items-center justify-center px-6 py-2.5 rounded-xl bg-agro-700 hover:bg-agro-800 text-white font-semibold text-sm shadow transition"
@@ -526,10 +750,35 @@ function DashboardContent() {
                   </button>
                 </div>
               </div>
+            ) : errorType === 'DEMO_LOAD_ERROR' ? (
+              <div className="bg-white p-6 sm:p-10 rounded-2xl border border-rose-200 shadow-card text-center max-w-xl mx-auto space-y-4">
+                <div className="w-14 h-14 bg-rose-100 text-rose-700 rounded-2xl flex items-center justify-center mx-auto shadow-sm">
+                  <AlertTriangle className="w-7 h-7" />
+                </div>
+                <h3 className="text-xl font-bold tracking-tight text-slate-900">Demo Ma'lumotlarni Yuklashda Xatolik</h3>
+                <p className="text-sm text-slate-600">
+                  {error}
+                </p>
+                <div className="pt-2 flex items-center justify-center gap-3">
+                  <button
+                    onClick={() => loadDashboardData(selectedOrgId)}
+                    className="inline-flex items-center justify-center px-5 py-2.5 rounded-xl bg-agro-700 hover:bg-agro-800 text-white font-semibold text-sm shadow transition"
+                  >
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    Qayta urinish
+                  </button>
+                  <button
+                    onClick={() => setIsDemoModalOpen(true)}
+                    className="inline-flex items-center justify-center px-5 py-2.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-sm transition"
+                  >
+                    Boshqa demo tanlash
+                  </button>
+                </div>
+              </div>
             ) : (
               <div className="p-4 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl flex items-center justify-between text-sm">
                 <div className="flex items-center space-x-3">
-                  <AlertOctagon className="w-5 h-5 flex-shrink-0 text-rose-600" />
+                  <AlertOctagon className="w-5 h-5 shrink-0 text-rose-600" />
                   <span>{error}</span>
                 </div>
                 <button

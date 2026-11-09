@@ -3,10 +3,28 @@ AgroHisob CFO - Security & Tenant Authorization Dependencies
 Enforces server-side authentication, role-based access control, and cross-tenant data isolation.
 """
 
-from typing import Callable, Optional
+from typing import Callable, Optional, Set
 from fastapi import Depends, Header, HTTPException, Request, status
 from app.auth.models import AuthenticatedUser, UserRole
 from app.auth.security import extract_user_from_payload, verify_token
+
+# Approved synthetic demo scenario IDs that allow public, read-only exploration without registration.
+SYNTHETIC_DEMO_SCENARIO_IDS: Set[str] = {
+    "scenario-small-farmer",
+    "scenario-exporter",
+    "scenario-cluster",
+    "demo-org-farmer",
+    "demo-org-fruit",
+    "demo-org-cluster",
+    "demo-org-agro-01",
+}
+
+
+def is_synthetic_demo_scenario(org_id: Optional[str]) -> bool:
+    """Checks if the given organization ID is an approved public synthetic demo benchmark scenario."""
+    if not org_id:
+        return False
+    return org_id.strip().lower() in SYNTHETIC_DEMO_SCENARIO_IDS
 
 
 def get_current_user(
@@ -48,13 +66,15 @@ def get_optional_current_user(
     request: Request,
     authorization: Optional[str] = Header(None, alias="Authorization"),
 ) -> Optional[AuthenticatedUser]:
-    """Extracts authenticated user if token is present and valid; returns None otherwise."""
+    """
+    Extracts authenticated user if Authorization header is present and valid.
+    If no Authorization header is provided, returns None (anonymous visitor).
+    If an Authorization header is explicitly provided but is invalid, expired, or malformed,
+    strictly raises HTTP 401 Unauthorized.
+    """
     if not authorization:
         return None
-    try:
-        return get_current_user(request=request, authorization=authorization)
-    except HTTPException:
-        return None
+    return get_current_user(request=request, authorization=authorization)
 
 
 def verify_tenant_access(
@@ -76,6 +96,34 @@ def verify_tenant_access(
             status_code=status.HTTP_403_FORBIDDEN,
             detail=f"Tashkilotlararo ruxsat rad etildi: Foydalanuvchi '{user.email}' tashkilot '{requested_org_id}' ma'lumotlariga kirish huquqiga ega emas.",
         )
+
+
+def verify_tenant_or_demo_read_access(
+    requested_org_id: str,
+    user: Optional[AuthenticatedUser] = None,
+    min_role: Optional[UserRole] = None,
+) -> None:
+    """
+    Authoritative server-side tenant isolation check with public demo read-access support:
+    1. If requested_org_id is an approved synthetic demo benchmark scenario:
+       Allows read-only access to ANY caller (anonymous visitor or authenticated user).
+       This allows evaluators and visitors to explore demo companies without registration.
+    2. If requested_org_id is ANY other organization (real customer/tenant):
+       - If user is None (anonymous visitor): strictly raises HTTP 401 Unauthorized.
+       - If user is authenticated: strictly verifies that user.has_org_access(requested_org_id, min_role).
+         If not authorized, strictly raises HTTP 403 Forbidden.
+    """
+    if is_synthetic_demo_scenario(requested_org_id):
+        return  # Synthetic benchmark demo data is public read-only
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Autentifikatsiya talab etiladi: Haqiqiy korxona ma'lumotlariga kirish uchun tizimga kiring.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    verify_tenant_access(requested_org_id, user, min_role=min_role)
 
 
 def require_admin_or_researcher(

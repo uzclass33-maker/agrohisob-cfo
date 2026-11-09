@@ -14,6 +14,14 @@ import {
   BarChart3,
   TrendingUp,
   Layers,
+  BrainCircuit,
+  Landmark,
+  ShieldAlert,
+  DollarSign,
+  Sliders,
+  Sparkles,
+  CheckCircle2,
+  Activity,
 } from 'lucide-react';
 import Reveal from '@/components/Reveal';
 
@@ -22,6 +30,89 @@ const MARKET_STATS = [
   { value: '56,2 trln so\'m', label: 'Agrobank 2026 kredit rejasi', accent: 'text-agro-700' },
   { value: '19 ta klaster', label: 'Kassa uzilishi sababli bankrotlik', accent: 'text-rose-600' },
   { value: 'VMQ-613', label: "Yer ijara huquqini garovga qo'yish", accent: 'text-harvest-600' },
+];
+
+const CORE_CAPABILITIES = [
+  {
+    href: '/dashboard?tab=cashflow',
+    icon: TrendingUp,
+    badge: 'Kassa Tahlili',
+    title: '12 Oylik Kassa Oqimi',
+    text: "Deterministik oylik pul kirimi, chiqimi, operatsion kassa oqimi va yakuniy kassa balansi tahlili.",
+    color: 'text-agro-700 bg-agro-50 border-agro-200',
+  },
+  {
+    href: '/dashboard?tab=forecast',
+    icon: CalendarClock,
+    badge: 'Prognozlash',
+    title: 'Mavsumiy Pul Oqimi Prognozi',
+    text: "Bahorgi ekish va kuzgi yig'im davrida kassa uzilishi (defitsit oylar) va eng past likvidlik nuqtasini aniqlash.",
+    color: 'text-sky-700 bg-sky-50 border-sky-200',
+  },
+  {
+    href: '/dashboard?tab=debt',
+    icon: Gauge,
+    badge: 'Anderrayting',
+    title: 'DSCR & Qarz Qoplami',
+    text: "Yillik CFADS va kredit to'lovlari mutanosibligi, bank talablariga muvofiqlik darajasi monitoringi.",
+    color: 'text-indigo-700 bg-indigo-50 border-indigo-200',
+  },
+  {
+    href: '/dashboard?tab=risks',
+    icon: ShieldAlert,
+    badge: 'Monitoring',
+    title: 'Moliyaviy Xavflar Monitori',
+    text: "Likvidlik taqchilligi, minimal bufer xatari va daromad mavsumiy konsentratsiyasi bo'yicha erta ogohlantirish.",
+    color: 'text-rose-700 bg-rose-50 border-rose-200',
+  },
+  {
+    href: '/scenario-analysis',
+    icon: Sliders,
+    badge: 'Simulyatsiya',
+    title: 'Hosil & Narx Stress-Testi',
+    text: "Hosil va narx ±20% o'zgarganda kassa holati, kassa teshigi va DSCR barqarorligini backend simulyatsiyasi.",
+    color: 'text-amber-700 bg-amber-50 border-amber-200',
+  },
+  {
+    href: '/dashboard?tab=ai_cfo',
+    icon: BrainCircuit,
+    badge: 'Tahliliy Aql',
+    title: 'AI-CFO Moliyaviy Xulosalari',
+    text: "Deterministik moliya qoidalari va maxfiylikni ta'minlovchi tushunarli tahliliy tavsiyalar.",
+    color: 'text-purple-700 bg-purple-50 border-purple-200',
+  },
+  {
+    href: '/credit-report',
+    icon: ShieldCheck,
+    badge: 'Bank Hujjati',
+    title: 'Bank Kredit Dosyesi (PDF & Excel)',
+    text: "Agrobank anderrayting talablariga 100% mos 8-sahifali rasmiy kredit paketi va formulali moliyaviy model.",
+    color: 'text-emerald-700 bg-emerald-50 border-emerald-200',
+  },
+  {
+    href: '/collateral-subsidies',
+    icon: Landmark,
+    badge: 'VMQ-613',
+    title: 'Yer Ijarasi Garov Bahosi',
+    text: "Yer ijara huquqini bonitet bali, maydon va qolgan ijara muddati asosida DCF usulida garovga baholash.",
+    color: 'text-harvest-700 bg-harvest-50 border-harvest-200',
+  },
+  {
+    href: '/collateral-subsidies',
+    icon: DollarSign,
+    badge: 'PQ-47 / PF-82',
+    title: 'Davlat Subsidiyalari',
+    text: "Tomchilatib sug'orish va imtiyozli agrokredit foiz stavkasini davlat tomonidan kompensatsiya qilish hisobi.",
+    color: 'text-teal-700 bg-teal-50 border-teal-200',
+  },
+  {
+    href: '/data-import',
+    icon: FileSpreadsheet,
+    badge: 'Smart Import',
+    title: 'Soliq E-Faktura & Bank Importi',
+    text: "Soliq Didox E-fakturalari (XML/Excel) va bank ko'chirmalarini (1C/txt) 3 daqiqada yuklash va solishtirish.",
+    color: 'text-blue-700 bg-blue-50 border-blue-200',
+  },
 ];
 
 const PROCESS_STEPS = [
@@ -142,6 +233,60 @@ export default function LandingPage() {
                 </Link>
               </div>
 
+              {/* Instant 3-Company Demo Explorer Strip */}
+              <div className="mt-8 rounded-2xl border border-agro-200/90 bg-white/90 p-4 shadow-sm backdrop-blur-sm">
+                <div className="flex items-center justify-between gap-2 mb-2.5">
+                  <span className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-navy-950">
+                    <Sparkles className="h-4 w-4 text-agro-700" />
+                    Ro'yxatdan o'tmasdan 3 ta demo korxonani ko'ring:
+                  </span>
+                  <span className="text-[10px] font-semibold text-agro-700 bg-agro-50 border border-agro-200 px-2 py-0.5 rounded-full">
+                    Ochiq sinov
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  <Link
+                    href="/dashboard?scenario=scenario-small-farmer"
+                    className="p-2.5 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-agro-50/60 hover:border-agro-400 transition group text-left"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="flex items-center gap-1.5 text-xs font-bold text-navy-900 group-hover:text-agro-800">
+                        <Wheat className="w-3.5 h-3.5 text-harvest-600" />
+                        Andijon Baraka
+                      </span>
+                      <span className="text-[10px] font-semibold text-slate-500">65 ga</span>
+                    </div>
+                    <span className="block text-[11px] text-slate-500 mt-1 line-clamp-1">Kichik fermer (May kassa uzilishi)</span>
+                  </Link>
+                  <Link
+                    href="/dashboard?scenario=scenario-exporter"
+                    className="p-2.5 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-agro-50/60 hover:border-agro-400 transition group text-left"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="flex items-center gap-1.5 text-xs font-bold text-navy-900 group-hover:text-agro-800">
+                        <Truck className="w-3.5 h-3.5 text-sky-600" />
+                        Samarqand Eksport
+                      </span>
+                      <span className="text-[10px] font-semibold text-slate-500">120 ga</span>
+                    </div>
+                    <span className="block text-[11px] text-slate-500 mt-1 line-clamp-1">Meva eksportyori (DSCR 1.82x)</span>
+                  </Link>
+                  <Link
+                    href="/dashboard?scenario=scenario-cluster"
+                    className="p-2.5 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-agro-50/60 hover:border-agro-400 transition group text-left"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="flex items-center gap-1.5 text-xs font-bold text-navy-900 group-hover:text-agro-800">
+                        <Building2 className="w-3.5 h-3.5 text-agro-700" />
+                        Qashqadaryo Klaster
+                      </span>
+                      <span className="text-[10px] font-semibold text-slate-500">2 500 ga</span>
+                    </div>
+                    <span className="block text-[11px] text-slate-500 mt-1 line-clamp-1">Yirik klaster (19.8 mlrd qarz)</span>
+                  </Link>
+                </div>
+              </div>
+
               {/* Trust stats */}
               <dl className="mt-12 grid grid-cols-2 gap-x-6 gap-y-7 border-t border-slate-200/80 pt-7 sm:grid-cols-4">
                 {MARKET_STATS.map((s) => (
@@ -203,6 +348,70 @@ export default function LandingPage() {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ============================== CORE FEATURES & CAPABILITIES ============================== */}
+      <section className="border-b border-slate-200/70 bg-gradient-to-b from-white to-slate-50/60 py-12 lg:py-16">
+        <div className="container-x">
+          <Reveal>
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+              <div>
+                <div className="eyebrow text-agro-700">
+                  <span className="h-2 w-2 rounded-full bg-agro-600" />
+                  Platformaning Asosiy Imkoniyatlari
+                </div>
+                <h2 className="mt-2 text-2xl font-bold tracking-tight text-navy-950 sm:text-3xl">
+                  Barcha Moliya va Kredit Modullari
+                </h2>
+                <p className="mt-2 text-sm text-slate-600 max-w-2xl">
+                  Menyuni qidirmasdan, quyidagi 10 ta asosiy modulning istalganiga bitta bosish orqali to'g'ridan-to'g'ri o'ting:
+                </p>
+              </div>
+              <Link
+                href="/dashboard"
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-agro-700 hover:text-agro-800 transition shrink-0"
+              >
+                Boshqaruv panelini ochish
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+          </Reveal>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
+            {CORE_CAPABILITIES.map((cap, i) => {
+              const Icon = cap.icon;
+              return (
+                <Reveal key={cap.title} delay={i * 40}>
+                  <Link
+                    href={cap.href}
+                    className="group flex flex-col justify-between h-full p-4 rounded-xl border border-slate-200/90 bg-white shadow-sm hover:border-agro-400 hover:shadow-md transition-all duration-200"
+                  >
+                    <div>
+                      <div className="flex items-center justify-between mb-3">
+                        <span className={`p-2 rounded-lg border ${cap.color}`}>
+                          <Icon className="h-4 w-4" />
+                        </span>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                          {cap.badge}
+                        </span>
+                      </div>
+                      <h3 className="text-sm font-bold text-navy-900 group-hover:text-agro-700 transition-colors leading-snug">
+                        {cap.title}
+                      </h3>
+                      <p className="mt-1.5 text-xs text-slate-500 leading-relaxed">
+                        {cap.text}
+                      </p>
+                    </div>
+                    <div className="mt-4 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-agro-700">
+                      <span>Modulga o'tish</span>
+                      <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" />
+                    </div>
+                  </Link>
+                </Reveal>
+              );
+            })}
           </div>
         </div>
       </section>

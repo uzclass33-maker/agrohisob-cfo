@@ -15,7 +15,13 @@ from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, R
 from fastapi.responses import FileResponse, Response
 from pydantic import BaseModel, Field
 
-from app.auth.dependencies import get_current_user, verify_tenant_access
+from app.auth.dependencies import (
+    get_current_user,
+    get_optional_current_user,
+    is_synthetic_demo_scenario,
+    verify_tenant_access,
+    verify_tenant_or_demo_read_access,
+)
 from app.auth.models import AuthenticatedUser, UserRole
 from app.reporting.credit_profile import (
     get_default_credit_profile,
@@ -77,12 +83,12 @@ def _resolve_profile_and_org(
 @router.post("/credit/profile", response_model=ProfileValidationResponse)
 def validate_credit_profile_endpoint(
     profile: CreditProfile,
-    user: AuthenticatedUser = Depends(get_current_user),
+    user: Optional[AuthenticatedUser] = Depends(get_optional_current_user),
 ):
     """
     Validates a credit application profile and ensures logical bounds.
     """
-    verify_tenant_access(profile.organization_id, user)
+    verify_tenant_or_demo_read_access(profile.organization_id, user)
     is_valid, errors = validate_credit_profile(profile)
     return ProfileValidationResponse(
         is_valid=is_valid,
@@ -95,13 +101,13 @@ def validate_credit_profile_endpoint(
 def validate_document_readiness_endpoint(
     request_data: Optional[Dict[str, Any]] = None,
     organization_id: Optional[str] = Query(None),
-    user: AuthenticatedUser = Depends(get_current_user),
+    user: Optional[AuthenticatedUser] = Depends(get_optional_current_user),
 ):
     """
     Returns the comprehensive 5-domain document readiness checklist and completeness score.
     """
     org_id, _, _ = _resolve_profile_and_org(organization_id, request_data)
-    verify_tenant_access(org_id, user)
+    verify_tenant_or_demo_read_access(org_id, user)
     from app.import_engine.reconciliation import ReconciliationEngine
     ledger_data = ReconciliationEngine.get_ledgers(org_id)
     is_imported = ledger_data["cash_transaction_count"] > 0
@@ -112,14 +118,14 @@ def validate_document_readiness_endpoint(
 def preview_credit_dossier_endpoint(
     request_data: Optional[Dict[str, Any]] = None,
     organization_id: Optional[str] = Query(None),
-    user: AuthenticatedUser = Depends(get_current_user),
+    user: Optional[AuthenticatedUser] = Depends(get_optional_current_user),
 ):
     """
     Constructs and returns canonical CreditDossierData for live UI preview.
     Ensures 100% financial consistency across UI, PDF, and Excel representations.
     """
     org_id, profile, fiscal_year = _resolve_profile_and_org(organization_id, request_data)
-    verify_tenant_access(org_id, user)
+    verify_tenant_or_demo_read_access(org_id, user)
     dossier = DossierBuilder.build_dossier(
         organization_id=org_id,
         custom_profile=profile,
@@ -132,14 +138,21 @@ def preview_credit_dossier_endpoint(
 def generate_credit_dossier_files_endpoint(
     request_data: Optional[Dict[str, Any]] = None,
     organization_id: Optional[str] = Query(None),
-    user: AuthenticatedUser = Depends(get_current_user),
+    user: Optional[AuthenticatedUser] = Depends(get_optional_current_user),
 ):
     """
     Builds canonical CreditDossierData and generates both PDF and Excel model files on disk.
     Registers the report in repository with SHA-256 hash and download endpoints.
     """
     org_id, profile, fiscal_year = _resolve_profile_and_org(organization_id, request_data)
-    verify_tenant_access(org_id, user, min_role=UserRole.CHIEF_ACCOUNTANT)
+    if not is_synthetic_demo_scenario(org_id):
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Autentifikatsiya talab etiladi: Haqiqiy korxona uchun hisobot yaratish uchun tizimga kiring.",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        verify_tenant_access(org_id, user, min_role=UserRole.CHIEF_ACCOUNTANT)
     dossier = DossierBuilder.build_dossier(
         organization_id=org_id,
         custom_profile=profile,
@@ -190,11 +203,19 @@ def generate_credit_dossier_files_endpoint(
 @router.get("/history", response_model=List[GeneratedReportRecord])
 def list_report_history_endpoint(
     organization_id: Optional[str] = Query(None),
-    user: AuthenticatedUser = Depends(get_current_user),
+    user: Optional[AuthenticatedUser] = Depends(get_optional_current_user),
 ):
     """
     Retrieves previous generated reports for an organization or all organizations.
     """
+    if organization_id and is_synthetic_demo_scenario(organization_id):
+        return ReportRepository.list_reports(organization_id=organization_id)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Autentifikatsiya talab etiladi: Hisobotlar tarixini ko'rish uchun tizimga kiring.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
     if organization_id:
         verify_tenant_access(organization_id, user)
     elif not user.is_super_admin:
@@ -208,7 +229,7 @@ def list_report_history_endpoint(
 @router.get("/{report_id}", response_model=GeneratedReportRecord)
 def get_report_metadata_endpoint(
     report_id: str,
-    user: AuthenticatedUser = Depends(get_current_user),
+    user: Optional[AuthenticatedUser] = Depends(get_optional_current_user),
 ):
     """
     Returns metadata for a specific generated report.
@@ -219,14 +240,14 @@ def get_report_metadata_endpoint(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Hisobot topilmadi: {report_id}"
         )
-    verify_tenant_access(record.organization_id, user)
+    verify_tenant_or_demo_read_access(record.organization_id, user)
     return record
 
 
 @router.get("/{report_id}/download/pdf")
 def download_pdf_report_endpoint(
     report_id: str,
-    user: AuthenticatedUser = Depends(get_current_user),
+    user: Optional[AuthenticatedUser] = Depends(get_optional_current_user),
 ):
     """
     Downloads the high-grade PDF credit dossier.
@@ -237,7 +258,7 @@ def download_pdf_report_endpoint(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"PDF hisobot fayli topilmadi: {report_id}"
         )
-    verify_tenant_access(record.organization_id, user)
+    verify_tenant_or_demo_read_access(record.organization_id, user)
 
     safe_title = record.organization_id.replace(" ", "_")
     filename = f"AgroHisob_Dossier_{safe_title}_{report_id[:8]}.pdf"
@@ -252,7 +273,7 @@ def download_pdf_report_endpoint(
 @router.get("/{report_id}/download/xlsx")
 def download_xlsx_model_endpoint(
     report_id: str,
-    user: AuthenticatedUser = Depends(get_current_user),
+    user: Optional[AuthenticatedUser] = Depends(get_optional_current_user),
 ):
     """
     Downloads the structured 8-sheet Excel financial model workbook.
@@ -263,7 +284,7 @@ def download_xlsx_model_endpoint(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Excel moliyaviy model fayli topilmadi: {report_id}"
         )
-    verify_tenant_access(record.organization_id, user)
+    verify_tenant_or_demo_read_access(record.organization_id, user)
 
     safe_title = record.organization_id.replace(" ", "_")
     filename = f"AgroHisob_Financial_Model_{safe_title}_{report_id[:8]}.xlsx"

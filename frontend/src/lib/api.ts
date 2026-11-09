@@ -15,6 +15,8 @@ export class ApiError extends Error {
   detail: string;
   isAuthError: boolean;
   isForbidden: boolean;
+  isSessionExpired: boolean;
+  isNetworkError: boolean;
 
   constructor(message: string, status: number = 500, detail?: string) {
     super(message);
@@ -23,6 +25,9 @@ export class ApiError extends Error {
     this.detail = detail || message;
     this.isAuthError = status === 401;
     this.isForbidden = status === 403;
+    const lower = (detail || message || '').toLowerCase();
+    this.isSessionExpired = status === 401 && (lower.includes('muddati') || lower.includes('expired') || lower.includes('qayta tizimga'));
+    this.isNetworkError = status === 0 || status >= 502;
   }
 }
 
@@ -51,7 +56,9 @@ export function getApiBaseUrl(): string {
 /**
  * Resolves authentication token for API calls.
  * Checks active Supabase session, evaluator demo token in localStorage,
- * or attaches synthetic demo token for open benchmark scenarios.
+ * or attaches synthetic demo token for open benchmark scenarios in local testing.
+ * In production browser environments, returns null for public demo scenarios
+ * so requests are sent cleanly without rejected fake tokens.
  */
 export async function getAuthToken(orgId?: string): Promise<string | null> {
   // 1. Check Supabase session first
@@ -69,11 +76,20 @@ export async function getAuthToken(orgId?: string): Promise<string | null> {
     if (storedToken) return storedToken;
   }
 
-  // 3. For synthetic benchmark scenarios, auto-attach demo token so public evaluators can explore smoothly
-  if (!orgId || orgId.startsWith('scenario-') || orgId.startsWith('demo-')) {
-    if (orgId === 'scenario-exporter') return 'test-token-cfo-org1';
-    if (orgId === 'scenario-small-farmer') return 'test-token-cfo-org2';
-    return 'test-token-demo';
+  // 3. For synthetic benchmark scenarios:
+  // In localhost/development environments only, attach test-tokens for local testing.
+  // In production remote browser environments, return null so the request travels cleanly as
+  // an anonymous public read request to approved synthetic demo scenarios.
+  const isSynthetic = !orgId || orgId.startsWith('scenario-') || orgId.startsWith('demo-');
+  if (isSynthetic) {
+    if (typeof window !== 'undefined') {
+      const hostname = window.location.hostname;
+      if (hostname === 'localhost' || hostname === '127.0.0.1') {
+        if (orgId === 'scenario-exporter') return 'test-token-cfo-org1';
+        if (orgId === 'scenario-small-farmer') return 'test-token-cfo-org2';
+        return 'test-token-demo';
+      }
+    }
   }
 
   return null;

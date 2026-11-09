@@ -1,6 +1,12 @@
 import copy
+from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException
-from app.auth.dependencies import get_current_user, verify_tenant_access
+from app.auth.dependencies import (
+    get_current_user,
+    get_optional_current_user,
+    verify_tenant_access,
+    verify_tenant_or_demo_read_access,
+)
 from app.auth.models import AuthenticatedUser
 from app.models.schemas import CreditReadinessScorecard
 from app.services.financial_engine import FinancialEngine
@@ -11,7 +17,7 @@ router = APIRouter(prefix="/reports", tags=["Credit Readiness Reports"])
 @router.get("/credit-readiness/{scenario_id}", response_model=CreditReadinessScorecard)
 def get_credit_readiness_report(
     scenario_id: str,
-    user: AuthenticatedUser = Depends(get_current_user),
+    user: Optional[AuthenticatedUser] = Depends(get_optional_current_user),
 ):
     """
     Generates an initial B2B Credit-Readiness Report for pre-underwriting analysis.
@@ -26,7 +32,7 @@ def get_credit_readiness_report(
         )
 
     org = scenario["organization"]
-    verify_tenant_access(org["id"], user)
+    verify_tenant_or_demo_read_access(org["id"], user)
 
     init_balance = scenario["initial_opening_balance"]
     inflows = copy.deepcopy(scenario["monthly_inflows"])

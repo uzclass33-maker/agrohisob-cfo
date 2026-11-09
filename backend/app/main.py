@@ -74,10 +74,11 @@ app = FastAPI(
 # Register Security Headers Middleware
 app.add_middleware(SecurityHeadersMiddleware)
 
-# Configure CORS dynamically
+# Configure CORS dynamically with robust origin regex for Vercel preview & production deployments
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ORIGINS,
+    allow_origin_regex=r"^https:\/\/(agrohisob-cfo[a-zA-Z0-9-]*\.vercel\.app|.*\.onrender\.com)$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -27,17 +27,16 @@ client = TestClient(app)
 # -----------------------------------------------------------------------------
 
 def test_unauthenticated_requests_return_401():
-    """Verifies that protected endpoints strictly reject unauthenticated requests."""
+    """Verifies that private tenant endpoints strictly reject unauthenticated requests."""
     endpoints = [
         ("GET", "/api/v1/imports/history/list"),
-        ("GET", "/api/v1/dashboard/overview?organization_id=scenario-small-farmer"),
-        ("GET", "/api/v1/dashboard/cashflow?organization_id=scenario-small-farmer"),
-        ("GET", "/api/v1/dashboard/forecast?organization_id=scenario-small-farmer"),
-        ("GET", "/api/v1/dashboard/debt?organization_id=scenario-small-farmer"),
-        ("GET", "/api/v1/dashboard/risks?organization_id=scenario-small-farmer"),
-        ("POST", "/api/v1/dashboard/scenarios", {"organization_id": "scenario-small-farmer"}),
-        ("GET", "/api/v1/reports/history?organization_id=scenario-small-farmer"),
-        ("GET", "/api/v1/reports/credit-readiness/scenario-small-farmer"),
+        ("GET", "/api/v1/dashboard/overview?organization_id=org-zarafshon-02"),
+        ("GET", "/api/v1/dashboard/cashflow?organization_id=org-zarafshon-02"),
+        ("GET", "/api/v1/dashboard/forecast?organization_id=org-zarafshon-02"),
+        ("GET", "/api/v1/dashboard/debt?organization_id=org-zarafshon-02"),
+        ("GET", "/api/v1/dashboard/risks?organization_id=org-zarafshon-02"),
+        ("POST", "/api/v1/dashboard/scenarios", {"organization_id": "org-zarafshon-02"}),
+        ("GET", "/api/v1/reports/history?organization_id=org-zarafshon-02"),
         ("GET", "/api/v1/research/studies"),
         ("GET", "/api/v1/research/interviews"),
         ("GET", "/api/v1/analytics/events"),
@@ -57,6 +56,28 @@ def test_unauthenticated_requests_return_401():
         assert "Autentifikatsiya talab etiladi" in res.json().get("detail", "") or "token" in res.json().get("detail", "").lower()
 
 
+def test_synthetic_demo_scenarios_allow_anonymous_read_access():
+    """Verifies that approved synthetic demo benchmark companies allow anonymous read-only access."""
+    demo_scenarios = [
+        "scenario-small-farmer",
+        "scenario-exporter",
+        "scenario-cluster"
+    ]
+    for s_id in demo_scenarios:
+        res = client.get(f"/api/v1/dashboard/overview?organization_id={s_id}")
+        assert res.status_code == 200, f"Anonymous access to demo scenario {s_id} must return 200, got {res.status_code}"
+        assert res.json()["is_synthetic"] is True
+        assert res.json()["organization_id"] == s_id
+
+        # Cashflow endpoint
+        cf_res = client.get(f"/api/v1/dashboard/cashflow?organization_id={s_id}")
+        assert cf_res.status_code == 200
+
+        # Forecast endpoint
+        fc_res = client.get(f"/api/v1/dashboard/forecast?organization_id={s_id}")
+        assert fc_res.status_code == 200
+
+
 def test_invalid_or_tampered_token_returns_401():
     """Verifies that malformed or improperly signed JWTs are rejected."""
     bad_headers = [
@@ -67,7 +88,7 @@ def test_invalid_or_tampered_token_returns_401():
     ]
 
     for h in bad_headers:
-        res = client.get("/api/v1/dashboard/overview?organization_id=scenario-small-farmer", headers=h)
+        res = client.get("/api/v1/dashboard/overview?organization_id=org-zarafshon-02", headers=h)
         assert res.status_code == 401
 
 
@@ -80,35 +101,35 @@ def test_cross_tenant_access_is_strictly_forbidden():
     Verifies that User A from Org 1 cannot access or modify Org 2's financial data.
     The client-supplied organization_id is never trusted blindly.
     """
-    # User 1 (CFO of org-bogdor-01 / scenario-exporter)
+    # User 1 (CFO of org-bogdor-01)
     token_user1 = "test-token-cfo-org1"
     headers_user1 = {"Authorization": f"Bearer {token_user1}"}
 
     # User 1 accessing own organization -> 200 OK
-    res_own = client.get("/api/v1/dashboard/overview?organization_id=scenario-exporter", headers=headers_user1)
+    res_own = client.get("/api/v1/dashboard/overview?organization_id=org-bogdor-01", headers=headers_user1)
     assert res_own.status_code == 200
 
-    # User 1 attempting to access Org 2 (scenario-small-farmer) -> 403 Forbidden
-    res_forbidden = client.get("/api/v1/dashboard/overview?organization_id=scenario-small-farmer", headers=headers_user1)
+    # User 1 attempting to access Org 2 (org-zarafshon-02) -> 403 Forbidden
+    res_forbidden = client.get("/api/v1/dashboard/overview?organization_id=org-zarafshon-02", headers=headers_user1)
     assert res_forbidden.status_code == 403
     assert "Tashkilotlararo ruxsat rad etildi" in res_forbidden.json().get("detail", "")
 
     # User 1 attempting to access Org 2 cashflow -> 403 Forbidden
-    res_cf_forbidden = client.get("/api/v1/dashboard/cashflow?organization_id=scenario-small-farmer", headers=headers_user1)
+    res_cf_forbidden = client.get("/api/v1/dashboard/cashflow?organization_id=org-zarafshon-02", headers=headers_user1)
     assert res_cf_forbidden.status_code == 403
 
     # User 1 attempting to run scenario simulation on Org 2 -> 403 Forbidden
     res_scen_forbidden = client.post(
         "/api/v1/dashboard/scenarios",
-        json={"organization_id": "scenario-small-farmer"},
+        json={"organization_id": "org-zarafshon-02"},
         headers=headers_user1
     )
     assert res_scen_forbidden.status_code == 403
 
-    # User 2 (CFO of org-zarafshon-02 / scenario-small-farmer) attempting to access scenario-exporter -> 403 Forbidden
+    # User 2 (CFO of org-zarafshon-02) attempting to access org-bogdor-01 -> 403 Forbidden
     token_user2 = "test-token-cfo-org2"
     headers_user2 = {"Authorization": f"Bearer {token_user2}"}
-    res_user2_forbidden = client.get("/api/v1/dashboard/overview?organization_id=scenario-exporter", headers=headers_user2)
+    res_user2_forbidden = client.get("/api/v1/dashboard/overview?organization_id=org-bogdor-01", headers=headers_user2)
     assert res_user2_forbidden.status_code == 403
 
 

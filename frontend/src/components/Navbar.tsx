@@ -66,7 +66,7 @@ export default function Navbar() {
           </Link>
 
           {/* Desktop navigation */}
-          <nav className="hidden items-center gap-0.5 xl:flex" aria-label="Asosiy menyu">
+          <nav className="hidden items-center gap-0.5 lg:flex" aria-label="Asosiy menyu">
             {NAV_ITEMS.map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href;
@@ -74,9 +74,9 @@ export default function Navbar() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`relative flex items-center gap-1.5 rounded-lg px-3 py-2 text-[13px] font-medium transition-colors duration-200 ${
+                  className={`relative flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs xl:text-[13px] font-medium transition-colors duration-200 ${
                     isActive
-                      ? 'bg-agro-50 text-agro-800'
+                      ? 'bg-agro-50 text-agro-800 font-semibold'
                       : 'text-slate-600 hover:bg-slate-100/80 hover:text-navy-900'
                   }`}
                 >
@@ -97,7 +97,7 @@ export default function Navbar() {
             </Link>
             <Link
               href="/demo"
-              className="hidden items-center justify-center gap-1.5 rounded-lg bg-agro-700 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:bg-agro-800 hover:shadow-md active:translate-y-px sm:inline-flex"
+              className="hidden items-center justify-center gap-1.5 rounded-lg bg-agro-700 px-3.5 py-2 text-xs xl:text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:bg-agro-800 hover:shadow-md active:translate-y-px sm:inline-flex"
             >
               Demo Sinov
               <ArrowRight className="h-4 w-4" />
@@ -108,7 +108,7 @@ export default function Navbar() {
               aria-expanded={open}
               aria-controls="mobile-nav"
               aria-label={open ? 'Menyuni yopish' : 'Menyuni ochish'}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 shadow-sm transition-colors hover:bg-slate-50 xl:hidden"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 shadow-sm transition-colors hover:bg-slate-50 lg:hidden"
             >
               {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
@@ -116,11 +116,70 @@ export default function Navbar() {
         </div>
       </div>
 
+      {/* Mobile Quick Navigation Strip — immediately visible on small screens without opening hamburger menu */}
+      <div className="flex items-center gap-1.5 overflow-x-auto px-4 py-2 border-t border-slate-200/70 bg-slate-50/95 lg:hidden text-xs font-medium no-scrollbar">
+        <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400 shrink-0 pr-1">Tezkor:</span>
+        <Link
+          href="/dashboard"
+          className={`shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-md transition ${
+            pathname === '/dashboard' ? 'bg-agro-700 text-white shadow-sm' : 'bg-white border border-slate-200 text-slate-700 hover:text-navy-900'
+          }`}
+        >
+          <LayoutDashboard className="w-3.5 h-3.5" />
+          <span>Moliya Paneli</span>
+        </Link>
+        <Link
+          href="/demo"
+          className={`shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-md transition ${
+            pathname === '/demo' ? 'bg-agro-700 text-white shadow-sm' : 'bg-white border border-slate-200 text-slate-700 hover:text-navy-900'
+          }`}
+        >
+          <Database className="w-3.5 h-3.5" />
+          <span>Demo (3 ta)</span>
+        </Link>
+        <Link
+          href="/credit-report"
+          className={`shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-md transition ${
+            pathname === '/credit-report' ? 'bg-agro-700 text-white shadow-sm' : 'bg-white border border-slate-200 text-slate-700 hover:text-navy-900'
+          }`}
+        >
+          <ShieldCheck className="w-3.5 h-3.5" />
+          <span>Kredit Dosyesi</span>
+        </Link>
+        <Link
+          href="/scenario-analysis"
+          className={`shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-md transition ${
+            pathname === '/scenario-analysis' ? 'bg-agro-700 text-white shadow-sm' : 'bg-white border border-slate-200 text-slate-700 hover:text-navy-900'
+          }`}
+        >
+          <Sliders className="w-3.5 h-3.5" />
+          <span>Stress-Test</span>
+        </Link>
+        <Link
+          href="/collateral-subsidies"
+          className={`shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-md transition ${
+            pathname === '/collateral-subsidies' ? 'bg-agro-700 text-white shadow-sm' : 'bg-white border border-slate-200 text-slate-700 hover:text-navy-900'
+          }`}
+        >
+          <Landmark className="w-3.5 h-3.5" />
+          <span>Garov & Subsidiyalar</span>
+        </Link>
+        <Link
+          href="/data-import"
+          className={`shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-md transition ${
+            pathname === '/data-import' ? 'bg-agro-700 text-white shadow-sm' : 'bg-white border border-slate-200 text-slate-700 hover:text-navy-900'
+          }`}
+        >
+          <FileSpreadsheet className="w-3.5 h-3.5" />
+          <span>Import</span>
+        </Link>
+      </div>
+
       {/* Mobile navigation panel */}
       {open && (
         <div
           id="mobile-nav"
-          className="border-t border-slate-200/70 bg-white xl:hidden"
+          className="border-t border-slate-200/70 bg-white lg:hidden"
         >
           <div className="container-x max-h-[calc(100vh-4rem)] overflow-y-auto py-4">
             <nav className="grid grid-cols-1 gap-1" aria-label="Mobil menyu">
