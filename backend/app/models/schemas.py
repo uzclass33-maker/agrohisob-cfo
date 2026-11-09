@@ -75,8 +75,8 @@ class FinancialSummaryResponse(BaseModel):
     total_annual_outflows: float
     net_annual_cash_flow: float
     total_debt_service: float
-    annual_dscr: float
-    dscr_rating: str  # EXCELLENT, HEALTHY, WATCHLIST, CRITICAL
+    annual_dscr: Optional[float] = None
+    dscr_rating: str  # EXCELLENT, HEALTHY, WATCHLIST, CRITICAL, NO_DEBT
     months_in_deficit: int
     lowest_cash_point: float
     lowest_cash_month: str

@@ -60,11 +60,11 @@ class PilotService:
             PilotMetricItem(
                 key="dscr_accuracy",
                 name="DSCR hisoblash aniqligi",
-                formula="EBITDA / (Foiz + Asosiy qarz / (1 - Soliq))",
+                formula="CFADS / Debt Service (CFADS = Operatsion kirimlar - Operatsion chiqimlar; mezon: >= 1.25 sozlanuvchi model)",
                 unit="koeffitsient",
                 baseline="Ko'pincha bank kredit modeli bilan 10-25% farq qiladi",
                 target="0.00% nomuvofiqlik (Agrobank andozasi)",
-                current_status="100% matematik moslik tekshirilgan",
+                current_status="100% matematik moslik tekshirilgan; qarz 0 bo'lganda None qaytariladi",
                 verification_evidence="docs/FINANCIAL_RELEASE_VALIDATION.md"
             ),
             PilotMetricItem(
@@ -101,6 +101,6 @@ class PilotService:
             synthetic_demo_profiles=synthetic_orgs,
             active_pilot_organizations=real_orgs,
             kpi_metrics=kpis,
-            data_security_status="ISOLATED_SANDBOX_ENFORCED",
-            readiness_level="PILOT_RECRUITMENT_READY"
+            data_security_status="APP_RBAC_ACTIVE_DB_RLS_NOT_VERIFIED",
+            readiness_level="PILOT_RECRUITMENT_CONDITIONAL_PENDING_SECURITY_VERIFICATION"
         )

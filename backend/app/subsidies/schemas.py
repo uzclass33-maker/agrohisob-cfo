@@ -68,6 +68,9 @@ class PQ47CalculationResult(BaseModel):
     phase_2_conditional_disbursement_uzs: Decimal  # 50%
     interest_compensation_annual_uzs: Optional[Decimal] = None
     interest_compensation_pct_points: Optional[Decimal] = None
+    legal_source: str = "O'zbekiston Respublikasi Prezidentining 2026-yil 5-fevraldagi PQ-47-son qarori 3-bandi"
+    effective_date: date = date(2026, 2, 5)
+    statutory_status: str = "INDIKATIV_MODELLASHTIRISH"
     calculation_breakdown_uz: str
     methodology_uz: str
     statutory_disclaimer_uz: str
@@ -81,6 +84,7 @@ class PF82CalculationRequest(BaseModel):
     outstanding_balance_uzs: Decimal = Field(default=Decimal("120000000.00"), ge=0)
     days_on_time_repaid: int = Field(default=365, ge=1, le=730)
     has_overdue_debt: bool = False
+    repaid_by_year_end: bool = Field(default=False, description="Hosil yili 31-dekabriga qadar to'liq qaytarilgan bo'lsa 5.0%, aks holda shartnomaviy muddatda 2.5%")
     assessment_date: Optional[date] = None
 
 
@@ -93,6 +97,9 @@ class PF82CalculationResult(BaseModel):
     indicative_interest_compensation_uzs: Decimal
     calculation_basis_uzs: Decimal
     days_compensated: int
+    legal_source: str = "O'zbekiston Respublikasi Prezidentining 2026-yil 8-maydagi PF-82-son Farmoni 1-bandi"
+    effective_date: date = date(2026, 5, 8)
+    statutory_status: str = "INDIKATIV_MODELLASHTIRISH"
     explanation_uz: str
     disclaimer_uz: str
 

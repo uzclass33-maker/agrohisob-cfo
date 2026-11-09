@@ -191,3 +191,75 @@ class GeneratedReport(Base):
     generated_at = Column(DateTime, default=datetime.utcnow)
 
     organization = relationship("Organization", back_populates="reports")
+
+
+# ---------------------------------------------------------------------
+# DURABLE PERSISTENCE MODELS (DURABLE DATABASE STORAGE REPLACING EPHEMERAL FILES)
+# ---------------------------------------------------------------------
+
+class ResearchStudyModel(Base):
+    __tablename__ = "research_studies"
+
+    id = Column(String(64), primary_key=True)
+    title = Column(String(255), nullable=False)
+    description = Column(Text, nullable=True)
+    target_count = Column(Integer, default=0)
+    status = Column(String(50), default="ACTIVE")
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    interviews = relationship("ResearchInterviewModel", back_populates="study", cascade="all, delete-orphan")
+
+
+class ResearchInterviewModel(Base):
+    __tablename__ = "research_interviews"
+
+    id = Column(String(64), primary_key=True)
+    study_id = Column(String(64), ForeignKey("research_studies.id", ondelete="CASCADE"), nullable=False, index=True)
+    code = Column(String(50), nullable=False)
+    customer_segment = Column(String(50), nullable=False)
+    source_classification = Column(String(50), nullable=False)
+    interview_status = Column(String(50), nullable=False)
+    participant_role = Column(String(100), nullable=False)
+    region = Column(String(100), nullable=False)
+    consent_recorded = Column(Boolean, default=False)
+    interview_date = Column(String(50), nullable=True)
+    validated_problems = Column(JSON, nullable=True)
+    unverified_assumptions = Column(JSON, nullable=True)
+    evidence_references = Column(JSON, nullable=True)
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    study = relationship("ResearchStudyModel", back_populates="interviews")
+
+
+class AnalyticsEventModel(Base):
+    __tablename__ = "analytics_events"
+
+    id = Column(String(64), primary_key=True)
+    event_type = Column(String(100), nullable=False, index=True)
+    user_id = Column(String(100), nullable=True, index=True)
+    organization_id = Column(String(100), nullable=True, index=True)
+    session_id = Column(String(100), nullable=False)
+    path = Column(String(255), nullable=True)
+    metadata_json = Column(JSON, nullable=True)
+    timestamp = Column(DateTime, default=datetime.utcnow, index=True)
+
+
+class ReportFileRecordModel(Base):
+    __tablename__ = "report_file_records"
+
+    report_id = Column(String(64), primary_key=True)
+    dossier_id = Column(String(64), nullable=True)
+    organization_id = Column(String(64), nullable=False, index=True)
+    report_title = Column(String(255), nullable=False)
+    status = Column(String(50), default="COMPLETED")
+    pdf_path = Column(String(500), nullable=True)
+    xlsx_path = Column(String(500), nullable=True)
+    pdf_url = Column(String(255), nullable=True)
+    xlsx_url = Column(String(255), nullable=True)
+    file_hash = Column(String(64), nullable=True)
+    file_size_bytes_pdf = Column(Integer, default=0)
+    file_size_bytes_xlsx = Column(Integer, default=0)
+    calculation_version = Column(String(20), default="5.0.0")
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+

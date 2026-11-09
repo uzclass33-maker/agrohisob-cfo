@@ -14,9 +14,10 @@ def _is_server_available(url: str) -> bool:
         return False
 
 def get_client():
+    headers = {"Authorization": "Bearer test-token-admin"}
     if _is_server_available(f"{BASE_BACKEND_URL}/health"):
-        return httpx.Client(base_url=BASE_BACKEND_URL)
-    return TestClient(app)
+        return httpx.Client(base_url=BASE_BACKEND_URL, headers=headers)
+    return TestClient(app, headers=headers)
 
 def test_e2e_backend_liveness_and_readiness():
     client = get_client()

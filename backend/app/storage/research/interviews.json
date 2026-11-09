@@ -95,5 +95,328 @@
     "notes": "Avtomatik test yozuvi",
     "id": "rec-165a9755",
     "created_at": "2026-11-09T09:47:20.136398+00:00"
+  },
+  {
+    "study_id": "study-agroventures-2026",
+    "code": "INT-SME-TEST-01",
+    "customer_segment": "SME",
+    "source_classification": "UNVERIFIED_NOTE",
+    "interview_status": "PLANNED",
+    "participant_role": "Moliya Menejeri",
+    "region": "Buxoro",
+    "consent_recorded": false,
+    "date": null,
+    "validated_problems": [],
+    "unverified_assumptions": [
+      "Meva quritish sexi uchun 1C hisoboti yetarli emas"
+    ],
+    "evidence_references": [],
+    "notes": "Avtomatik test yozuvi",
+    "id": "rec-2f1a5388",
+    "created_at": "2026-11-09T10:23:15.386775+00:00"
+  },
+  {
+    "study_id": "study-agroventures-2026",
+    "code": "INT-SME-TEST-01",
+    "customer_segment": "SME",
+    "source_classification": "UNVERIFIED_NOTE",
+    "interview_status": "PLANNED",
+    "participant_role": "Moliya Menejeri",
+    "region": "Buxoro",
+    "consent_recorded": false,
+    "date": null,
+    "validated_problems": [],
+    "unverified_assumptions": [
+      "Meva quritish sexi uchun 1C hisoboti yetarli emas"
+    ],
+    "evidence_references": [],
+    "notes": "Avtomatik test yozuvi",
+    "id": "rec-068c9a0f",
+    "created_at": "2026-11-09T10:23:39.007066+00:00"
+  },
+  {
+    "study_id": "study-agroventures-2026",
+    "code": "INT-SME-TEST-01",
+    "customer_segment": "SME",
+    "source_classification": "UNVERIFIED_NOTE",
+    "interview_status": "PLANNED",
+    "participant_role": "Moliya Menejeri",
+    "region": "Buxoro",
+    "consent_recorded": false,
+    "date": null,
+    "validated_problems": [],
+    "unverified_assumptions": [
+      "Meva quritish sexi uchun 1C hisoboti yetarli emas"
+    ],
+    "evidence_references": [],
+    "notes": "Avtomatik test yozuvi",
+    "id": "rec-fc678d1c",
+    "created_at": "2026-11-09T10:24:49.666121+00:00"
+  },
+  {
+    "study_id": "study-agroventures-2026",
+    "code": "INT-SME-TEST-01",
+    "customer_segment": "SME",
+    "source_classification": "UNVERIFIED_NOTE",
+    "interview_status": "PLANNED",
+    "participant_role": "Moliya Menejeri",
+    "region": "Buxoro",
+    "consent_recorded": false,
+    "date": null,
+    "validated_problems": [],
+    "unverified_assumptions": [
+      "Meva quritish sexi uchun 1C hisoboti yetarli emas"
+    ],
+    "evidence_references": [],
+    "notes": "Avtomatik test yozuvi",
+    "id": "rec-78ad87b5",
+    "created_at": "2026-11-09T10:25:46.663307+00:00"
+  },
+  {
+    "study_id": "study-agroventures-2026",
+    "code": "INT-SME-TEST-01",
+    "customer_segment": "SME",
+    "source_classification": "UNVERIFIED_NOTE",
+    "interview_status": "PLANNED",
+    "participant_role": "Moliya Menejeri",
+    "region": "Buxoro",
+    "consent_recorded": false,
+    "date": null,
+    "validated_problems": [],
+    "unverified_assumptions": [
+      "Meva quritish sexi uchun 1C hisoboti yetarli emas"
+    ],
+    "evidence_references": [],
+    "notes": "Avtomatik test yozuvi",
+    "id": "rec-65b5ae78",
+    "created_at": "2026-11-09T10:38:52.466406+00:00"
+  },
+  {
+    "study_id": "study-agroventures-2026",
+    "code": "INT-SME-TEST-01",
+    "customer_segment": "SME",
+    "source_classification": "UNVERIFIED_NOTE",
+    "interview_status": "PLANNED",
+    "participant_role": "Moliya Menejeri",
+    "region": "Buxoro",
+    "consent_recorded": false,
+    "date": null,
+    "validated_problems": [],
+    "unverified_assumptions": [
+      "Meva quritish sexi uchun 1C hisoboti yetarli emas"
+    ],
+    "evidence_references": [],
+    "notes": "Avtomatik test yozuvi",
+    "id": "rec-f6a6caeb",
+    "created_at": "2026-11-09T10:42:16.885030+00:00"
+  },
+  {
+    "study_id": "study-agroventures-2026",
+    "code": "INT-SME-TEST-01",
+    "customer_segment": "SME",
+    "source_classification": "UNVERIFIED_NOTE",
+    "interview_status": "PLANNED",
+    "participant_role": "Moliya Menejeri",
+    "region": "Buxoro",
+    "consent_recorded": false,
+    "date": null,
+    "validated_problems": [],
+    "unverified_assumptions": [
+      "Meva quritish sexi uchun 1C hisoboti yetarli emas"
+    ],
+    "evidence_references": [],
+    "notes": "Avtomatik test yozuvi",
+    "id": "rec-816de3d6",
+    "created_at": "2026-11-09T10:50:59.490728+00:00"
+  },
+  {
+    "study_id": "study-agroventures-2026",
+    "code": "INT-SME-TEST-01",
+    "customer_segment": "SME",
+    "source_classification": "UNVERIFIED_NOTE",
+    "interview_status": "PLANNED",
+    "participant_role": "Moliya Menejeri",
+    "region": "Buxoro",
+    "consent_recorded": false,
+    "date": null,
+    "validated_problems": [],
+    "unverified_assumptions": [
+      "Meva quritish sexi uchun 1C hisoboti yetarli emas"
+    ],
+    "evidence_references": [],
+    "notes": "Avtomatik test yozuvi",
+    "id": "rec-185b6892",
+    "created_at": "2026-11-09T10:52:49.077861+00:00"
+  },
+  {
+    "study_id": "study-agroventures-2026",
+    "code": "INT-SME-TEST-01",
+    "customer_segment": "SME",
+    "source_classification": "UNVERIFIED_NOTE",
+    "interview_status": "PLANNED",
+    "participant_role": "Moliya Menejeri",
+    "region": "Buxoro",
+    "consent_recorded": false,
+    "date": null,
+    "validated_problems": [],
+    "unverified_assumptions": [
+      "Meva quritish sexi uchun 1C hisoboti yetarli emas"
+    ],
+    "evidence_references": [],
+    "notes": "Avtomatik test yozuvi",
+    "id": "rec-43e7a745",
+    "created_at": "2026-11-09T10:54:03.172132+00:00"
+  },
+  {
+    "study_id": "study-agrohisob-2026",
+    "code": "INT-TEST-2550",
+    "customer_segment": "FARMER",
+    "source_classification": "UNVERIFIED_NOTE",
+    "interview_status": "PLANNED",
+    "participant_role": "Fermer Boshlig'i",
+    "region": "Farg'ona",
+    "consent_recorded": false,
+    "date": null,
+    "validated_problems": [],
+    "unverified_assumptions": [
+      "Test farazi"
+    ],
+    "evidence_references": [],
+    "notes": "Durable DB test",
+    "id": "rec-a4923a44",
+    "created_at": "2026-11-09T11:09:10.791115+00:00"
+  },
+  {
+    "study_id": "study-agrohisob-2026",
+    "code": "INT-TEST-2603",
+    "customer_segment": "FARMER",
+    "source_classification": "UNVERIFIED_NOTE",
+    "interview_status": "PLANNED",
+    "participant_role": "Fermer Boshlig'i",
+    "region": "Farg'ona",
+    "consent_recorded": false,
+    "date": null,
+    "validated_problems": [],
+    "unverified_assumptions": [
+      "Test farazi"
+    ],
+    "evidence_references": [],
+    "notes": "Durable DB test",
+    "id": "rec-fc99d5d6",
+    "created_at": "2026-11-09T11:10:03.719283+00:00"
+  },
+  {
+    "study_id": "study-agrohisob-2026",
+    "code": "INT-TEST-2622",
+    "customer_segment": "FARMER",
+    "source_classification": "UNVERIFIED_NOTE",
+    "interview_status": "PLANNED",
+    "participant_role": "Fermer Boshlig'i",
+    "region": "Farg'ona",
+    "consent_recorded": false,
+    "date": null,
+    "validated_problems": [],
+    "unverified_assumptions": [
+      "Test farazi"
+    ],
+    "evidence_references": [],
+    "notes": "Durable DB test",
+    "id": "rec-2bcc15b8",
+    "created_at": "2026-11-09T11:10:22.159043+00:00"
+  },
+  {
+    "study_id": "study-agroventures-2026",
+    "code": "INT-SME-TEST-01",
+    "customer_segment": "SME",
+    "source_classification": "UNVERIFIED_NOTE",
+    "interview_status": "PLANNED",
+    "participant_role": "Moliya Menejeri",
+    "region": "Buxoro",
+    "consent_recorded": false,
+    "date": null,
+    "validated_problems": [],
+    "unverified_assumptions": [
+      "Meva quritish sexi uchun 1C hisoboti yetarli emas"
+    ],
+    "evidence_references": [],
+    "notes": "Avtomatik test yozuvi",
+    "id": "rec-a0865be6",
+    "created_at": "2026-11-09T11:10:34.303864+00:00"
+  },
+  {
+    "study_id": "study-agroventures-2026",
+    "code": "INT-SME-TEST-01",
+    "customer_segment": "SME",
+    "source_classification": "UNVERIFIED_NOTE",
+    "interview_status": "PLANNED",
+    "participant_role": "Moliya Menejeri",
+    "region": "Buxoro",
+    "consent_recorded": false,
+    "date": null,
+    "validated_problems": [],
+    "unverified_assumptions": [
+      "Meva quritish sexi uchun 1C hisoboti yetarli emas"
+    ],
+    "evidence_references": [],
+    "notes": "Avtomatik test yozuvi",
+    "id": "rec-2e530d7f",
+    "created_at": "2026-11-09T11:13:36.962325+00:00"
+  },
+  {
+    "study_id": "study-agroventures-2026",
+    "code": "INT-SME-TEST-01",
+    "customer_segment": "SME",
+    "source_classification": "UNVERIFIED_NOTE",
+    "interview_status": "PLANNED",
+    "participant_role": "Moliya Menejeri",
+    "region": "Buxoro",
+    "consent_recorded": false,
+    "date": null,
+    "validated_problems": [],
+    "unverified_assumptions": [
+      "Meva quritish sexi uchun 1C hisoboti yetarli emas"
+    ],
+    "evidence_references": [],
+    "notes": "Avtomatik test yozuvi",
+    "id": "rec-c0aadfe2",
+    "created_at": "2026-11-09T11:14:03.031730+00:00"
+  },
+  {
+    "study_id": "study-agrohisob-2026",
+    "code": "INT-TEST-2843",
+    "customer_segment": "FARMER",
+    "source_classification": "UNVERIFIED_NOTE",
+    "interview_status": "PLANNED",
+    "participant_role": "Fermer Boshlig'i",
+    "region": "Farg'ona",
+    "consent_recorded": false,
+    "date": null,
+    "validated_problems": [],
+    "unverified_assumptions": [
+      "Test farazi"
+    ],
+    "evidence_references": [],
+    "notes": "Durable DB test",
+    "id": "rec-54ffdb6d",
+    "created_at": "2026-11-09T11:14:03.423202+00:00"
+  },
+  {
+    "study_id": "study-agroventures-2026",
+    "code": "INT-SME-TEST-01",
+    "customer_segment": "SME",
+    "source_classification": "UNVERIFIED_NOTE",
+    "interview_status": "PLANNED",
+    "participant_role": "Moliya Menejeri",
+    "region": "Buxoro",
+    "consent_recorded": false,
+    "date": null,
+    "validated_problems": [],
+    "unverified_assumptions": [
+      "Meva quritish sexi uchun 1C hisoboti yetarli emas"
+    ],
+    "evidence_references": [],
+    "notes": "Avtomatik test yozuvi",
+    "id": "rec-72dd1314",
+    "created_at": "2026-11-09T11:14:14.913719+00:00"
   }
 ]

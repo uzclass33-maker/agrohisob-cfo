@@ -44,13 +44,15 @@ def test_pq47_orchard_rate():
     )
 
     res = calculate_pq47_subsidy(req)
-    # Orchard rate = 10,000,000 UZS/ha
-    assert res.base_rate_per_ha_uzs == Decimal("10000000.00")
-    assert res.estimated_total_subsidy_uzs == Decimal("100000000.00")
+    # Orchard rate = 11,000,000 UZS/ha under official norms
+    assert res.base_rate_per_ha_uzs == Decimal("11000000.00")
+    assert res.estimated_total_subsidy_uzs == Decimal("110000000.00")
+    assert res.legal_source == "O'zbekiston Respublikasi Prezidentining 2026-yil 5-fevraldagi PQ-47-son qarori 3-bandi"
+    assert "indikativ" in res.statutory_disclaimer_uz.lower()
 
 
 def test_pq47_regional_coefficient_water_scarce():
-    # Priority region: Qoraqalpog'iston (1.2x multiplier)
+    # Priority region: Qoraqalpog'iston (1.25x multiplier under PQ-47 3-band)
     req = PQ47CalculationRequest(
         crop_type="Paxta",
         area_hectares=20.0,
@@ -62,11 +64,11 @@ def test_pq47_regional_coefficient_water_scarce():
     )
 
     res = calculate_pq47_subsidy(req)
-    assert res.regional_coefficient == 1.2
-    # Base: 8M * 1.2 = 9.6M UZS/ha
-    assert res.effective_rate_per_ha_uzs == Decimal("9600000.00")
-    # 20 ha * 9.6M = 192M UZS
-    assert res.estimated_total_subsidy_uzs == Decimal("192000000.00")
+    assert res.regional_coefficient == 1.25
+    # Base: 8M * 1.25 = 10.0M UZS/ha
+    assert res.effective_rate_per_ha_uzs == Decimal("10000000.00")
+    # 20 ha * 10.0M = 200M UZS
+    assert res.estimated_total_subsidy_uzs == Decimal("200000000.00")
 
 
 def test_pq47_interest_rate_compensation():

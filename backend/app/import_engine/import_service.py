@@ -418,6 +418,7 @@ class ImportService:
 
         return ImportPreviewResponse(
             batch_id=batch.batch_id,
+            organization_id=batch.org_id,
             file_name=batch.file_name,
             file_hash_sha256=batch.file_hash,
             document_type=batch.document_type,

@@ -32,5 +32,435 @@
     },
     "id": "evt-ce3f4f9c3f",
     "timestamp": "2026-11-09T09:47:20.163863+00:00"
+  },
+  {
+    "event_type": "import_started",
+    "session_id": "sess-anon-12345",
+    "organization_id": "org-test-cluster",
+    "duration_ms": 120,
+    "status": "SUCCESS",
+    "error_category": null,
+    "metadata": {
+      "file_ext": ".xlsx",
+      "tax_id": "[REDACTED_PII]",
+      "inn": "[REDACTED_PII]",
+      "bank_account": "[REDACTED_PII]",
+      "records_count": 45
+    },
+    "id": "evt-5d3aa6febe",
+    "timestamp": "2026-11-09T10:22:34.131931+00:00"
+  },
+  {
+    "event_type": "import_started",
+    "session_id": "sess-anon-12345",
+    "organization_id": "org-test-cluster",
+    "duration_ms": 120,
+    "status": "SUCCESS",
+    "error_category": null,
+    "metadata": {
+      "file_ext": ".xlsx",
+      "tax_id": "[REDACTED_PII]",
+      "inn": "[REDACTED_PII]",
+      "bank_account": "[REDACTED_PII]",
+      "records_count": 45
+    },
+    "id": "evt-4efb81709a",
+    "timestamp": "2026-11-09T10:23:15.449664+00:00"
+  },
+  {
+    "event_type": "import_started",
+    "session_id": "sess-anon-12345",
+    "organization_id": "org-test-cluster",
+    "duration_ms": 120,
+    "status": "SUCCESS",
+    "error_category": null,
+    "metadata": {
+      "file_ext": ".xlsx",
+      "tax_id": "[REDACTED_PII]",
+      "inn": "[REDACTED_PII]",
+      "bank_account": "[REDACTED_PII]",
+      "records_count": 45
+    },
+    "id": "evt-c8c2e0fcb8",
+    "timestamp": "2026-11-09T10:23:39.058466+00:00"
+  },
+  {
+    "event_type": "import_started",
+    "session_id": "sess-anon-12345",
+    "organization_id": "org-test-cluster",
+    "duration_ms": 120,
+    "status": "SUCCESS",
+    "error_category": null,
+    "metadata": {
+      "file_ext": ".xlsx",
+      "tax_id": "[REDACTED_PII]",
+      "inn": "[REDACTED_PII]",
+      "bank_account": "[REDACTED_PII]",
+      "records_count": 45
+    },
+    "id": "evt-082750ec89",
+    "timestamp": "2026-11-09T10:24:49.712559+00:00"
+  },
+  {
+    "event_type": "import_started",
+    "session_id": "sess-test-security-999",
+    "organization_id": "demo-org-agro-01",
+    "duration_ms": 150,
+    "status": "SUCCESS",
+    "error_category": null,
+    "metadata": {
+      "section": "import_page",
+      "file_ext": ".xlsx",
+      "tax_id": "[REDACTED_PII]",
+      "inn": "[REDACTED_PII]",
+      "free_text_note": "Fermer STIR: [REDACTED_STIR], JSHSHIR: [REDACTED_PINFL], Bank hisobi: [REDACTED_BANK_ACC], Karta: [REDACTED_CARD], Telefon: [REDACTED_PHONE], Email: [REDACTED_EMAIL]"
+    },
+    "id": "evt-a061f100f0",
+    "timestamp": "2026-11-09T10:25:31.469629+00:00"
+  },
+  {
+    "event_type": "import_started",
+    "session_id": "sess-anon-12345",
+    "organization_id": "org-test-cluster",
+    "duration_ms": 120,
+    "status": "SUCCESS",
+    "error_category": null,
+    "metadata": {
+      "file_ext": ".xlsx",
+      "tax_id": "[REDACTED_PII]",
+      "inn": "[REDACTED_PII]",
+      "bank_account": "[REDACTED_PII]",
+      "records_count": 45
+    },
+    "id": "evt-d666234a18",
+    "timestamp": "2026-11-09T10:25:46.706981+00:00"
+  },
+  {
+    "event_type": "import_started",
+    "session_id": "sess-test-security-999",
+    "organization_id": "demo-org-agro-01",
+    "duration_ms": 150,
+    "status": "SUCCESS",
+    "error_category": null,
+    "metadata": {
+      "section": "import_page",
+      "file_ext": ".xlsx",
+      "tax_id": "[REDACTED_PII]",
+      "inn": "[REDACTED_PII]",
+      "free_text_note": "Fermer STIR: [REDACTED_STIR], JSHSHIR: [REDACTED_PINFL], Bank hisobi: [REDACTED_BANK_ACC], Karta: [REDACTED_CARD], Telefon: [REDACTED_PHONE], Email: [REDACTED_EMAIL]"
+    },
+    "id": "evt-73a64b38d8",
+    "timestamp": "2026-11-09T10:25:47.074777+00:00"
+  },
+  {
+    "event_type": "import_started",
+    "session_id": "sess-anon-12345",
+    "organization_id": "org-test-cluster",
+    "duration_ms": 120,
+    "status": "SUCCESS",
+    "error_category": null,
+    "metadata": {
+      "file_ext": ".xlsx",
+      "tax_id": "[REDACTED_PII]",
+      "inn": "[REDACTED_PII]",
+      "bank_account": "[REDACTED_PII]",
+      "records_count": 45
+    },
+    "id": "evt-4b40e4b54d",
+    "timestamp": "2026-11-09T10:38:52.497774+00:00"
+  },
+  {
+    "event_type": "import_started",
+    "session_id": "sess-test-security-999",
+    "organization_id": "demo-org-agro-01",
+    "duration_ms": 150,
+    "status": "SUCCESS",
+    "error_category": null,
+    "metadata": {
+      "section": "import_page",
+      "file_ext": ".xlsx",
+      "tax_id": "[REDACTED_PII]",
+      "inn": "[REDACTED_PII]",
+      "free_text_note": "Fermer STIR: [REDACTED_STIR], JSHSHIR: [REDACTED_PINFL], Bank hisobi: [REDACTED_BANK_ACC], Karta: [REDACTED_CARD], Telefon: [REDACTED_PHONE], Email: [REDACTED_EMAIL]"
+    },
+    "id": "evt-0053ca281e",
+    "timestamp": "2026-11-09T10:38:52.764876+00:00"
+  },
+  {
+    "event_type": "import_started",
+    "session_id": "sess-anon-12345",
+    "organization_id": "org-test-cluster",
+    "duration_ms": 120,
+    "status": "SUCCESS",
+    "error_category": null,
+    "metadata": {
+      "file_ext": ".xlsx",
+      "tax_id": "[REDACTED_PII]",
+      "inn": "[REDACTED_PII]",
+      "bank_account": "[REDACTED_PII]",
+      "records_count": 45
+    },
+    "id": "evt-1d3b35d722",
+    "timestamp": "2026-11-09T10:42:16.926535+00:00"
+  },
+  {
+    "event_type": "import_started",
+    "session_id": "sess-test-security-999",
+    "organization_id": "demo-org-agro-01",
+    "duration_ms": 150,
+    "status": "SUCCESS",
+    "error_category": null,
+    "metadata": {
+      "section": "import_page",
+      "file_ext": ".xlsx",
+      "tax_id": "[REDACTED_PII]",
+      "inn": "[REDACTED_PII]",
+      "free_text_note": "Fermer STIR: [REDACTED_STIR], JSHSHIR: [REDACTED_PINFL], Bank hisobi: [REDACTED_BANK_ACC], Karta: [REDACTED_CARD], Telefon: [REDACTED_PHONE], Email: [REDACTED_EMAIL]"
+    },
+    "id": "evt-d6a6200cac",
+    "timestamp": "2026-11-09T10:42:17.169855+00:00"
+  },
+  {
+    "event_type": "import_started",
+    "session_id": "sess-anon-12345",
+    "organization_id": "org-test-cluster",
+    "duration_ms": 120,
+    "status": "SUCCESS",
+    "error_category": null,
+    "metadata": {
+      "file_ext": ".xlsx",
+      "tax_id": "[REDACTED_PII]",
+      "inn": "[REDACTED_PII]",
+      "bank_account": "[REDACTED_PII]",
+      "records_count": 45
+    },
+    "id": "evt-2961497838",
+    "timestamp": "2026-11-09T10:50:59.524141+00:00"
+  },
+  {
+    "event_type": "import_started",
+    "session_id": "sess-test-security-999",
+    "organization_id": "demo-org-agro-01",
+    "duration_ms": 150,
+    "status": "SUCCESS",
+    "error_category": null,
+    "metadata": {
+      "section": "import_page",
+      "file_ext": ".xlsx",
+      "tax_id": "[REDACTED_PII]",
+      "inn": "[REDACTED_PII]",
+      "free_text_note": "Fermer STIR: [REDACTED_STIR], JSHSHIR: [REDACTED_PINFL], Bank hisobi: [REDACTED_BANK_ACC], Karta: [REDACTED_CARD], Telefon: [REDACTED_PHONE], Email: [REDACTED_EMAIL]"
+    },
+    "id": "evt-446732b609",
+    "timestamp": "2026-11-09T10:50:59.893893+00:00"
+  },
+  {
+    "event_type": "import_started",
+    "session_id": "sess-anon-12345",
+    "organization_id": "org-test-cluster",
+    "duration_ms": 120,
+    "status": "SUCCESS",
+    "error_category": null,
+    "metadata": {
+      "file_ext": ".xlsx",
+      "tax_id": "[REDACTED_PII]",
+      "inn": "[REDACTED_PII]",
+      "bank_account": "[REDACTED_PII]",
+      "records_count": 45
+    },
+    "id": "evt-a17d8fa4d6",
+    "timestamp": "2026-11-09T10:52:49.118907+00:00"
+  },
+  {
+    "event_type": "import_started",
+    "session_id": "sess-test-security-999",
+    "organization_id": "demo-org-agro-01",
+    "duration_ms": 150,
+    "status": "SUCCESS",
+    "error_category": null,
+    "metadata": {
+      "section": "import_page",
+      "file_ext": ".xlsx",
+      "tax_id": "[REDACTED_PII]",
+      "inn": "[REDACTED_PII]",
+      "free_text_note": "Fermer STIR: [REDACTED_STIR], JSHSHIR: [REDACTED_PINFL], Bank hisobi: [REDACTED_BANK_ACC], Karta: [REDACTED_CARD], Telefon: [REDACTED_PHONE], Email: [REDACTED_EMAIL]"
+    },
+    "id": "evt-f5ba696d7d",
+    "timestamp": "2026-11-09T10:52:49.452956+00:00"
+  },
+  {
+    "event_type": "import_started",
+    "session_id": "sess-anon-12345",
+    "organization_id": "org-test-cluster",
+    "duration_ms": 120,
+    "status": "SUCCESS",
+    "error_category": null,
+    "metadata": {
+      "file_ext": ".xlsx",
+      "tax_id": "[REDACTED_PII]",
+      "inn": "[REDACTED_PII]",
+      "bank_account": "[REDACTED_PII]",
+      "records_count": 45
+    },
+    "id": "evt-459829554d",
+    "timestamp": "2026-11-09T10:54:03.230929+00:00"
+  },
+  {
+    "event_type": "import_started",
+    "session_id": "sess-test-security-999",
+    "organization_id": "demo-org-agro-01",
+    "duration_ms": 150,
+    "status": "SUCCESS",
+    "error_category": null,
+    "metadata": {
+      "section": "import_page",
+      "file_ext": ".xlsx",
+      "tax_id": "[REDACTED_PII]",
+      "inn": "[REDACTED_PII]",
+      "free_text_note": "Fermer STIR: [REDACTED_STIR], JSHSHIR: [REDACTED_PINFL], Bank hisobi: [REDACTED_BANK_ACC], Karta: [REDACTED_CARD], Telefon: [REDACTED_PHONE], Email: [REDACTED_EMAIL]"
+    },
+    "id": "evt-64cf8c4c50",
+    "timestamp": "2026-11-09T10:54:03.764064+00:00"
+  },
+  {
+    "event_type": "dashboard_viewed",
+    "session_id": "sess-test-1794222603",
+    "organization_id": "org-bogdor-01",
+    "duration_ms": null,
+    "status": "SUCCESS",
+    "error_category": null,
+    "metadata": {
+      "section": "dashboard_viewed"
+    },
+    "id": "evt-c3ee1587de",
+    "timestamp": "2026-11-09T11:10:03.744572+00:00"
+  },
+  {
+    "event_type": "dashboard_viewed",
+    "session_id": "sess-test-1794222622",
+    "organization_id": "org-bogdor-01",
+    "duration_ms": null,
+    "status": "SUCCESS",
+    "error_category": null,
+    "metadata": {
+      "section": "dashboard_viewed"
+    },
+    "id": "evt-94df1b8016",
+    "timestamp": "2026-11-09T11:10:22.177131+00:00"
+  },
+  {
+    "event_type": "import_started",
+    "session_id": "sess-anon-12345",
+    "organization_id": "org-test-cluster",
+    "duration_ms": 120,
+    "status": "SUCCESS",
+    "error_category": null,
+    "metadata": {
+      "file_ext": ".xlsx",
+      "tax_id": "[REDACTED_PII]",
+      "inn": "[REDACTED_PII]",
+      "bank_account": "[REDACTED_PII]",
+      "records_count": 45
+    },
+    "id": "evt-c03017cd6c",
+    "timestamp": "2026-11-09T11:10:34.363429+00:00"
+  },
+  {
+    "event_type": "import_started",
+    "session_id": "sess-test-security-999",
+    "organization_id": "demo-org-agro-01",
+    "duration_ms": 150,
+    "status": "SUCCESS",
+    "error_category": null,
+    "metadata": {
+      "section": "import_page",
+      "file_ext": ".xlsx",
+      "tax_id": "[REDACTED_PII]",
+      "inn": "[REDACTED_PII]",
+      "free_text_note": "Fermer STIR: [REDACTED_STIR], JSHSHIR: [REDACTED_PINFL], Bank hisobi: [REDACTED_BANK_ACC], Karta: [REDACTED_CARD], Telefon: [REDACTED_PHONE], Email: [REDACTED_EMAIL]"
+    },
+    "id": "evt-197bf37a52",
+    "timestamp": "2026-11-09T11:10:34.619752+00:00"
+  },
+  {
+    "event_type": "import_started",
+    "session_id": "sess-anon-12345",
+    "organization_id": "org-test-cluster",
+    "duration_ms": 120,
+    "status": "SUCCESS",
+    "error_category": null,
+    "metadata": {
+      "file_ext": ".xlsx",
+      "tax_id": "[REDACTED_PII]",
+      "inn": "[REDACTED_PII]",
+      "bank_account": "[REDACTED_PII]",
+      "records_count": 45
+    },
+    "id": "evt-c27738e425",
+    "timestamp": "2026-11-09T11:13:37.045131+00:00"
+  },
+  {
+    "event_type": "import_started",
+    "session_id": "sess-anon-12345",
+    "organization_id": "org-test-cluster",
+    "duration_ms": 120,
+    "status": "SUCCESS",
+    "error_category": null,
+    "metadata": {
+      "file_ext": ".xlsx",
+      "tax_id": "[REDACTED_PII]",
+      "inn": "[REDACTED_PII]",
+      "bank_account": "[REDACTED_PII]",
+      "records_count": 45
+    },
+    "id": "evt-93a18433c8",
+    "timestamp": "2026-11-09T11:14:03.123371+00:00"
+  },
+  {
+    "event_type": "dashboard_viewed",
+    "session_id": "sess-test-1794222843",
+    "organization_id": "org-bogdor-01",
+    "duration_ms": null,
+    "status": "SUCCESS",
+    "error_category": null,
+    "metadata": {
+      "section": "dashboard_viewed"
+    },
+    "id": "evt-08447160cd",
+    "timestamp": "2026-11-09T11:14:03.438106+00:00"
+  },
+  {
+    "event_type": "import_started",
+    "session_id": "sess-anon-12345",
+    "organization_id": "org-test-cluster",
+    "duration_ms": 120,
+    "status": "SUCCESS",
+    "error_category": null,
+    "metadata": {
+      "file_ext": ".xlsx",
+      "tax_id": "[REDACTED_PII]",
+      "inn": "[REDACTED_PII]",
+      "bank_account": "[REDACTED_PII]",
+      "records_count": 45
+    },
+    "id": "evt-5c01fd4bd4",
+    "timestamp": "2026-11-09T11:14:14.972639+00:00"
+  },
+  {
+    "event_type": "import_started",
+    "session_id": "sess-test-security-999",
+    "organization_id": "demo-org-agro-01",
+    "duration_ms": 150,
+    "status": "SUCCESS",
+    "error_category": null,
+    "metadata": {
+      "section": "import_page",
+      "file_ext": ".xlsx",
+      "tax_id": "[REDACTED_PII]",
+      "inn": "[REDACTED_PII]",
+      "free_text_note": "Fermer STIR: [REDACTED_STIR], JSHSHIR: [REDACTED_PINFL], Bank hisobi: [REDACTED_BANK_ACC], Karta: [REDACTED_CARD], Telefon: [REDACTED_PHONE], Email: [REDACTED_EMAIL]"
+    },
+    "id": "evt-e888ca24ae",
+    "timestamp": "2026-11-09T11:14:15.204195+00:00"
   }
 ]

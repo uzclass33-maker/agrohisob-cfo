@@ -6,8 +6,10 @@ from app.analytics.schemas import AnalyticsEventType
 
 client = TestClient(app)
 
+AUTH_HEADERS = {"Authorization": "Bearer test-token-researcher"}
+
 def test_research_studies_api():
-    response = client.get("/api/v1/research/studies")
+    response = client.get("/api/v1/research/studies", headers=AUTH_HEADERS)
     assert response.status_code == 200
     studies = response.json()
     assert isinstance(studies, list)
@@ -15,7 +17,7 @@ def test_research_studies_api():
     assert studies[0]["id"] == "study-agroventures-2026"
 
 def test_research_interviews_api_source_classification():
-    response = client.get("/api/v1/research/interviews")
+    response = client.get("/api/v1/research/interviews", headers=AUTH_HEADERS)
     assert response.status_code == 200
     interviews = response.json()
     assert isinstance(interviews, list)
@@ -45,7 +47,7 @@ def test_add_interview_record():
         "evidence_references": [],
         "notes": "Avtomatik test yozuvi"
     }
-    response = client.post("/api/v1/research/interviews", json=payload)
+    response = client.post("/api/v1/research/interviews", json=payload, headers=AUTH_HEADERS)
     assert response.status_code == 201
     data = response.json()
     assert data["code"] == "INT-SME-TEST-01"
@@ -108,4 +110,4 @@ def test_pilot_dashboard_summary_api():
     assert len(dash["synthetic_demo_profiles"]) == 3
     assert len(dash["active_pilot_organizations"]) == 0
     assert len(dash["kpi_metrics"]) >= 4
-    assert dash["data_security_status"] == "ISOLATED_SANDBOX_ENFORCED"
+    assert dash["data_security_status"] == "APP_RBAC_ACTIVE_DB_RLS_NOT_VERIFIED"

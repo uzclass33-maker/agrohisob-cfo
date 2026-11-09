@@ -6,8 +6,11 @@ Cash Flow, 12-Month Forecasting, Debt & DSCR, Risk Monitoring, and Scenario Simu
 
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
+
+from app.auth.dependencies import get_current_user, verify_tenant_access
+from app.auth.models import AuthenticatedUser
 
 from app.financial_engine.schemas import (
     DashboardDebtResponse,
@@ -179,8 +182,10 @@ def _build_forecast_request(org_id: str, fiscal_year: int = 2026) -> SeasonalFor
 @router.get("/overview", response_model=DashboardOverviewResponse)
 def get_dashboard_overview(
     organization_id: str = Query("scenario-small-farmer", description="Organization or Scenario ID"),
-    reporting_period: str = Query("2026", description="Reporting period (e.g. 2026)")
+    reporting_period: str = Query("2026", description="Reporting period (e.g. 2026)"),
+    user: AuthenticatedUser = Depends(get_current_user),
 ):
+    verify_tenant_access(organization_id, user)
     data = _get_org_data(organization_id)
     org_info = data["organization"]
 
@@ -225,8 +230,10 @@ def get_dashboard_overview(
 @router.get("/cashflow", response_model=DashboardCashFlowResponse)
 def get_dashboard_cashflow(
     organization_id: str = Query("scenario-small-farmer", description="Organization or Scenario ID"),
-    reporting_period: str = Query("2026", description="Fiscal year")
+    reporting_period: str = Query("2026", description="Fiscal year"),
+    user: AuthenticatedUser = Depends(get_current_user),
 ):
+    verify_tenant_access(organization_id, user)
     data = _get_org_data(organization_id)
     init_bal = Decimal(str(data["initial_opening_balance"]))
 
@@ -303,8 +310,10 @@ def get_dashboard_cashflow(
 @router.get("/forecast", response_model=DashboardForecastResponse)
 def get_dashboard_forecast(
     organization_id: str = Query("scenario-small-farmer", description="Organization or Scenario ID"),
-    fiscal_year: int = Query(2026, description="Forecast fiscal year")
+    fiscal_year: int = Query(2026, description="Forecast fiscal year"),
+    user: AuthenticatedUser = Depends(get_current_user),
 ):
+    verify_tenant_access(organization_id, user)
     forecast_req = _build_forecast_request(organization_id, fiscal_year)
     forecast_res = calculate_seasonal_forecast(forecast_req)
 
@@ -346,8 +355,10 @@ def get_dashboard_forecast(
 # -----------------------------------------------------------------------------
 @router.get("/debt", response_model=DashboardDebtResponse)
 def get_dashboard_debt(
-    organization_id: str = Query("scenario-small-farmer", description="Organization or Scenario ID")
+    organization_id: str = Query("scenario-small-farmer", description="Organization or Scenario ID"),
+    user: AuthenticatedUser = Depends(get_current_user),
 ):
+    verify_tenant_access(organization_id, user)
     data = _get_org_data(organization_id)
     debt_items = data.get("debt_schedule", [])
 
@@ -412,8 +423,10 @@ def get_dashboard_debt(
 # -----------------------------------------------------------------------------
 @router.get("/risks", response_model=DashboardRisksResponse)
 def get_dashboard_risks(
-    organization_id: str = Query("scenario-small-farmer", description="Organization or Scenario ID")
+    organization_id: str = Query("scenario-small-farmer", description="Organization or Scenario ID"),
+    user: AuthenticatedUser = Depends(get_current_user),
 ):
+    verify_tenant_access(organization_id, user)
     forecast_req = _build_forecast_request(organization_id, 2026)
     forecast_res = calculate_seasonal_forecast(forecast_req)
 
@@ -512,11 +525,15 @@ class ScenarioSimulationInput(BaseModel):
 
 
 @router.post("/scenarios", response_model=ScenarioComparisonResponse)
-def simulate_scenario(input_params: ScenarioSimulationInput):
+def simulate_scenario(
+    input_params: ScenarioSimulationInput,
+    user: AuthenticatedUser = Depends(get_current_user),
+):
     """
     Executes authoritative backend recalculation of alternative scenario
     using the Financial Engine (never simple client-side KPI scaling).
     """
+    verify_tenant_access(input_params.organization_id, user)
     forecast_req = _build_forecast_request(input_params.organization_id, 2026)
 
     adj = ScenarioAdjustments(

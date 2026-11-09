@@ -1,0 +1,28 @@
+[
+  {
+    "event_type": "dashboard_viewed",
+    "session_id": "sess-test-1794222636",
+    "organization_id": "org-bogdor-01",
+    "duration_ms": null,
+    "status": "SUCCESS",
+    "error_category": null,
+    "metadata": {
+      "section": "dashboard_viewed"
+    },
+    "id": "evt-7e5ff67744",
+    "timestamp": "2026-11-09T11:10:36.752948+00:00"
+  },
+  {
+    "event_type": "dashboard_viewed",
+    "session_id": "sess-test-1794222857",
+    "organization_id": "org-bogdor-01",
+    "duration_ms": null,
+    "status": "SUCCESS",
+    "error_category": null,
+    "metadata": {
+      "section": "dashboard_viewed"
+    },
+    "id": "evt-8f45e3d7e9",
+    "timestamp": "2026-11-09T11:14:17.150271+00:00"
+  }
+]

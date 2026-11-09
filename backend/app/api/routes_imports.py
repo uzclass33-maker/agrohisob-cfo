@@ -5,9 +5,11 @@ Soliq E-Faktura and Bank Statement financial data.
 """
 
 from typing import Dict, List, Optional
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 from pydantic import BaseModel
 
+from app.auth.dependencies import get_current_user, verify_tenant_access
+from app.auth.models import AuthenticatedUser, UserRole
 from app.import_engine.exceptions import (
     ImportEngineError,
     FileValidationError,
@@ -48,7 +50,9 @@ async def upload_financial_document(
     file: UploadFile = File(...),
     document_type: DocumentTypeEnum = Form(...),
     organization_id: str = Form("demo-org-agro-01"),
+    user: AuthenticatedUser = Depends(get_current_user),
 ):
+    verify_tenant_access(organization_id, user, min_role=UserRole.CHIEF_ACCOUNTANT)
     try:
         content = await file.read()
         preview = ImportService.upload_and_stage(
@@ -79,9 +83,14 @@ async def upload_financial_document(
     summary="Get import batch preview",
     description="Retrieves parsed rows, detected mappings, validation summary, and financial totals for an uploaded batch."
 )
-def get_batch_preview(batch_id: str):
+def get_batch_preview(
+    batch_id: str,
+    user: AuthenticatedUser = Depends(get_current_user),
+):
     try:
-        return ImportService.get_batch_preview(batch_id)
+        preview = ImportService.get_batch_preview(batch_id)
+        verify_tenant_access(preview.organization_id, user)
+        return preview
     except ImportEngineError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=e.message)
 
@@ -92,8 +101,14 @@ def get_batch_preview(batch_id: str):
     summary="Update column mapping profile",
     description="Applies manual or custom column mapping adjustments and re-validates all rows."
 )
-def update_batch_mapping(batch_id: str, request: CustomMappingRequest):
+def update_batch_mapping(
+    batch_id: str,
+    request: CustomMappingRequest,
+    user: AuthenticatedUser = Depends(get_current_user),
+):
     try:
+        preview = ImportService.get_batch_preview(batch_id)
+        verify_tenant_access(preview.organization_id, user, min_role=UserRole.CHIEF_ACCOUNTANT)
         return ImportService.apply_custom_mapping(batch_id, request.mappings)
     except UnmappedColumnError as e:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=e.message)
@@ -107,8 +122,15 @@ def update_batch_mapping(batch_id: str, request: CustomMappingRequest):
     summary="Override row values or classification",
     description="Permits manual user adjustment of category, amount, counterparty, or direction before final commit."
 )
-def override_batch_row(batch_id: str, row_id: str, override: RowOverride):
+def override_batch_row(
+    batch_id: str,
+    row_id: str,
+    override: RowOverride,
+    user: AuthenticatedUser = Depends(get_current_user),
+):
     try:
+        preview = ImportService.get_batch_preview(batch_id)
+        verify_tenant_access(preview.organization_id, user, min_role=UserRole.CHIEF_ACCOUNTANT)
         return ImportService.override_row(batch_id, row_id, override)
     except ImportEngineError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=e.message)
@@ -120,8 +142,14 @@ def override_batch_row(batch_id: str, row_id: str, override: RowOverride):
     summary="Commit validated batch into ledger",
     description="Posts records into the designated ledger (Bank -> Cash Ledger; E-Faktura -> Invoice Obligation Ledger) and updates financial metrics."
 )
-def commit_batch(batch_id: str, request: Optional[BatchCommitRequest] = None):
+def commit_batch(
+    batch_id: str,
+    request: Optional[BatchCommitRequest] = None,
+    user: AuthenticatedUser = Depends(get_current_user),
+):
     try:
+        preview = ImportService.get_batch_preview(batch_id)
+        verify_tenant_access(preview.organization_id, user, min_role=UserRole.CHIEF_ACCOUNTANT)
         req = request or BatchCommitRequest(batch_id=batch_id)
         # Ensure batch_id consistency
         req.batch_id = batch_id
@@ -138,5 +166,9 @@ def commit_batch(batch_id: str, request: Optional[BatchCommitRequest] = None):
     summary="List import history",
     description="Retrieves chronological audit log of all imported batches for an organization."
 )
-def get_import_history(organization_id: str = "demo-org-agro-01"):
+def get_import_history(
+    organization_id: str = "demo-org-agro-01",
+    user: AuthenticatedUser = Depends(get_current_user),
+):
+    verify_tenant_access(organization_id, user)
     return ImportService.get_history(organization_id)

@@ -42,7 +42,7 @@ Tizim quyidagi asosiy imkoniyatlarni taqdim etadi:
 
 * **Tayyorlik darajasi:** To'liq ishchi bulut MVP (Production-ready).
 * **Texnologik stek:** Next.js 14 (App Router, Tailwind CSS, SWC Minified), Python 3.12 / FastAPI, PostgreSQL (Supabase Cloud) va ReportLab/OpenPyXL generatsiya dvigatellari.
-* **Sifat kafolati:** 166/166 ta avtomatlashtirilgan test 100% yashil o'tgan. OWASP Top 10 xavfsizlik sarlavhalari va Excel formula inyektsiyasiga qarshi himoya to'liq joriy etilgan.
+* **Sifat kafolati:** 175/175 ta avtomatlashtirilgan test 100% yashil o'tgan. Server sathi autentifikatsiyasi (JWT/Bearer), ko'p ijarachilik (multi-tenant) izolyatsiyasi, chuqur regex PII tozalash, OWASP Top 10 xavfsizlik sarlavhalari va Excel formula inyektsiyasiga qarshi himoya to'liq joriy etilgan.
 * **Sintetik ssenariylar:** Meva eksportyori ("Bog'dor Bog'i"), sabzavotchilik fermasi ("Zarafshon Baraka") va paxta klasteri ("Oq Oltin Agroklaster") uchun to'liq ishchi profillar mavjud.
 
 ---

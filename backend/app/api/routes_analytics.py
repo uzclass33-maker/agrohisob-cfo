@@ -1,5 +1,7 @@
 from typing import List, Optional
-from fastapi import APIRouter, Query, status
+from fastapi import APIRouter, Depends, Query, status
+from app.auth.dependencies import require_admin
+from app.auth.models import AuthenticatedUser
 from app.analytics.schemas import (
     AnalyticsEvent, AnalyticsEventCreate,
     AnalyticsSummary
@@ -19,9 +21,13 @@ def track_event(event: AnalyticsEventCreate):
 @router.get("/events", response_model=List[AnalyticsEvent])
 def list_events(
     limit: int = Query(50, ge=1, le=200),
-    event_type: Optional[str] = Query(None, description="Filter by event type")
+    event_type: Optional[str] = Query(None, description="Filter by event type"),
+    user: AuthenticatedUser = Depends(require_admin)
 ):
-    """Retrieves recent anonymized product interaction events."""
+    """
+    Retrieves recent anonymized product interaction events.
+    Strictly restricted to system administrators (SUPER_ADMIN).
+    """
     return ProductAnalytics.get_events(limit=limit, event_type=event_type)
 
 @router.get("/summary", response_model=AnalyticsSummary)

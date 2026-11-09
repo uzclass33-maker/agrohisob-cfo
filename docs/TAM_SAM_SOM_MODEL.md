@@ -57,3 +57,20 @@ Startapning dastlabki 36 oylik bosqichida Agrobank va AgroVentures akseleratori 
 
 1. *Obuna to'loviga rozilik:* O'zbekiston agrar sohasida B2B SaaS mahsulotiga yillik $500 – $1,200 to'lash madaniyati hali to'liq shakllanmagan. Bu ko'rsatkich Assignment 8 dagi intervyular va pilotlar orqali tekshirilishi lozim.
 2. *Bank referral komissiyasi:* Banklar startapga kredit arizasini tayyorlab bergani uchun referral komissiya to'lashi taxmini hozircha yuridik shartnoma bilan tasdiqlanmagan va hisob-kitoblarga kiritilmagan.
+
+---
+
+## 4. $1.23M VA $1.92M KO'RSATKICHLARI O'RTASIDAGI ANIQ REKONSILLATSIYA
+
+Hujjatlarda ilgari uchragan $1.23M va $1.92M ko'rsatkichlari orasidagi chalkashlik quyidagi qat'iy moliya-modellashtirish mezoni bilan o'zaro muvofiqlashtirildi:
+
+| Ko'rsatkich | Qiymati | Asosi va Hisoblash Usuli | Holati |
+|---|---|---|---|
+| **TAM (Total Addressable Market)** | **$64.8M / yil** | 83,600 agrobiznes subyektlari (fermerlar, SME, eksportyorlar, klasterlar) | Tahliliy baho (Stat.uz asosida) |
+| **SAM (Serviceable Addressable Market)** | **$18.4M / yil** | 22,700 ta bankdan faol kredit oluvchi va raqamlashgan agrobizneslar | Tahliliy baho |
+| **SOM (Bazaviy Konservativ - 3-yil)** | **$1,232,500 / yil (~$1.23M)** | **1,450 ta mijoz** $\times$ o'rtacha **$850/yil ARPU** (~6.7% SAM ulushi) | **Asosiy maqsadli prognoz (Base Target)** |
+| **SOM (Agressiv Optimistik - 3-4-yil)** | **$1,920,000 / yil (~$1.92M)** | **2,000 ta mijoz** $\times$ o'rtacha **$960/yil ARPU ($80/oy)** (~10.4% SAM ulushi) | **Yuqori ssenariy potensiali (Upside)** |
+| **Prognoz qilingan ARR (1-yil)** | **$30,000 – $50,000 / yil** | 30-50 ta to'lovchi fermer va korxona | Rejalashtirilgan prognoz |
+| **Haqiqiy Joriy Tushum (Actual Revenue)** | **$0.00** | Bank hisobvarag'i yoki to'lov tizimiga haqiqiy tushum mavjud emas | **Tasdiqlangan fakt (Haqiqat)** |
+| **Haqiqiy To'lovchi Mijozlar (Paying Customers)** | **0** | Haqiqiy pullik shartnoma imzolagan mijozlar mavjud emas | **Tasdiqlangan fakt (Haqiqat)** |
+

@@ -1,8 +1,9 @@
 # AGROHISOB CFO — INVESTOR PITCH DECK (10 SLIDE PRESENTATION)
 
-**Dizayn uslubi:** Premium FinTech | To'q ko'k (Deep Navy `#0A192F`), Zangori-yashil (Financial Green `#10B981`), Oq (`#FFFFFF`) | Minimalistik, qat'iy ma'lumotlar  
+**Holati:** 10 slaydlik to'liq matnli kontent tayyorlandi va fakt-chekingdan o'tkazildi; grafik dizayn fayli (Canva / Figma / PDF taqdimot) hali yaratilmagan (grafik dizayner tomonidan vizuallashtirilishi kutilmoqda).  
+**Dizayn uslubi tavsiyasi:** Premium FinTech | To'q ko'k (Deep Navy `#0A192F`), Zangori-yashil (Financial Green `#10B981`), Oq (`#FFFFFF`) | Minimalistik, qat'iy ma'lumotlar  
 **Til:** O'zbek tili (Lotin yozuvi)  
-**Holat:** Fact-checked & Pilot-ready
+**Tekshirilganlik:** Fact-checked & Pilot-ready (Haqiqiy holat: 0 to'lovchi mijoz, $0 tushum; MVP dasturi to'liq ishchi)
 
 ---
 
@@ -30,7 +31,7 @@
 
 * **Sarlavha:** Bozor ko'lami va agromoliyalash ehtiyoji
 * **Faktlar:**
-  * **25% YaIM:** Qishloq xo'jaligining O'zbekiston iqtisodiyotidagi ulushi.
+  * **18.9% YAIM:** Qishloq xo'jaligining O'zbekiston Respublikasi yalpi ichki mahsulotidagi rasmiy ulushi (Stat.uz, 2025-yil yakuni).
   * **90,000+ fermer va 30,000+ agrobiznes:** Ulkan va raqamlashtirishga muhtoj B2B auditoriya.
   * **25-35 trln so'm / yil:** Agrobank va davlat tomonidan har yili agrar sohaga ajratiladigan kredit va lizing oqimi.
   * **70%+ kredit qaramligi:** Fermerlarning mutlaq ko'pchiligi bahorgi aylanma mablag' kreditiga muhtoj.

@@ -1,5 +1,7 @@
 import copy
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
+from app.auth.dependencies import get_current_user, verify_tenant_access
+from app.auth.models import AuthenticatedUser
 from app.models.schemas import CreditReadinessScorecard
 from app.services.financial_engine import FinancialEngine
 from app.services.synthetic_data import get_scenario_by_id
@@ -7,7 +9,10 @@ from app.services.synthetic_data import get_scenario_by_id
 router = APIRouter(prefix="/reports", tags=["Credit Readiness Reports"])
 
 @router.get("/credit-readiness/{scenario_id}", response_model=CreditReadinessScorecard)
-def get_credit_readiness_report(scenario_id: str):
+def get_credit_readiness_report(
+    scenario_id: str,
+    user: AuthenticatedUser = Depends(get_current_user),
+):
     """
     Generates an initial B2B Credit-Readiness Report for pre-underwriting analysis.
     Evaluates debt capacity, DSCR viability, and VMQ-613 leasehold collateral potential.
@@ -21,6 +26,8 @@ def get_credit_readiness_report(scenario_id: str):
         )
 
     org = scenario["organization"]
+    verify_tenant_access(org["id"], user)
+
     init_balance = scenario["initial_opening_balance"]
     inflows = copy.deepcopy(scenario["monthly_inflows"])
     outflows = copy.deepcopy(scenario["monthly_outflows"])
@@ -50,7 +57,11 @@ def get_credit_readiness_report(scenario_id: str):
     risks = []
 
     # 1. DSCR factor (up to 30 points)
-    if summary.annual_dscr >= 1.6:
+    if summary.annual_dscr is None:
+        score += 25
+        strengths.append("Qarz majburiyatlari mavjud emas (DSCR: N/A) — korxona qarzsiz ishlaydi.")
+        dscr_assessment = "Qarzsiz (N/A)"
+    elif summary.annual_dscr >= 1.6:
         score += 25
         strengths.append(f"Yuqori DSCR koeffitsiyenti ({summary.annual_dscr}x) — qarzga xizmat ko'rsatish imkoniyati a'lo darajada.")
         dscr_assessment = "A'lo (DSCR >= 1.6x)"

@@ -11,10 +11,12 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 import uuid
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException, Query, Request, Response, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Request, Response, status
 from fastapi.responses import FileResponse, Response
 from pydantic import BaseModel, Field
 
+from app.auth.dependencies import get_current_user, verify_tenant_access
+from app.auth.models import AuthenticatedUser, UserRole
 from app.reporting.credit_profile import (
     get_default_credit_profile,
     validate_credit_profile,
@@ -73,10 +75,14 @@ def _resolve_profile_and_org(
 
 
 @router.post("/credit/profile", response_model=ProfileValidationResponse)
-def validate_credit_profile_endpoint(profile: CreditProfile):
+def validate_credit_profile_endpoint(
+    profile: CreditProfile,
+    user: AuthenticatedUser = Depends(get_current_user),
+):
     """
     Validates a credit application profile and ensures logical bounds.
     """
+    verify_tenant_access(profile.organization_id, user)
     is_valid, errors = validate_credit_profile(profile)
     return ProfileValidationResponse(
         is_valid=is_valid,
@@ -88,12 +94,14 @@ def validate_credit_profile_endpoint(profile: CreditProfile):
 @router.post("/credit/validate", response_model=DocumentReadinessChecklist)
 def validate_document_readiness_endpoint(
     request_data: Optional[Dict[str, Any]] = None,
-    organization_id: Optional[str] = Query(None)
+    organization_id: Optional[str] = Query(None),
+    user: AuthenticatedUser = Depends(get_current_user),
 ):
     """
     Returns the comprehensive 5-domain document readiness checklist and completeness score.
     """
     org_id, _, _ = _resolve_profile_and_org(organization_id, request_data)
+    verify_tenant_access(org_id, user)
     from app.import_engine.reconciliation import ReconciliationEngine
     ledger_data = ReconciliationEngine.get_ledgers(org_id)
     is_imported = ledger_data["cash_transaction_count"] > 0
@@ -103,13 +111,15 @@ def validate_document_readiness_endpoint(
 @router.post("/credit/preview", response_model=CreditDossierData)
 def preview_credit_dossier_endpoint(
     request_data: Optional[Dict[str, Any]] = None,
-    organization_id: Optional[str] = Query(None)
+    organization_id: Optional[str] = Query(None),
+    user: AuthenticatedUser = Depends(get_current_user),
 ):
     """
     Constructs and returns canonical CreditDossierData for live UI preview.
     Ensures 100% financial consistency across UI, PDF, and Excel representations.
     """
     org_id, profile, fiscal_year = _resolve_profile_and_org(organization_id, request_data)
+    verify_tenant_access(org_id, user)
     dossier = DossierBuilder.build_dossier(
         organization_id=org_id,
         custom_profile=profile,
@@ -121,13 +131,15 @@ def preview_credit_dossier_endpoint(
 @router.post("/credit/generate", response_model=GeneratedReportRecord)
 def generate_credit_dossier_files_endpoint(
     request_data: Optional[Dict[str, Any]] = None,
-    organization_id: Optional[str] = Query(None)
+    organization_id: Optional[str] = Query(None),
+    user: AuthenticatedUser = Depends(get_current_user),
 ):
     """
     Builds canonical CreditDossierData and generates both PDF and Excel model files on disk.
     Registers the report in repository with SHA-256 hash and download endpoints.
     """
     org_id, profile, fiscal_year = _resolve_profile_and_org(organization_id, request_data)
+    verify_tenant_access(org_id, user, min_role=UserRole.CHIEF_ACCOUNTANT)
     dossier = DossierBuilder.build_dossier(
         organization_id=org_id,
         custom_profile=profile,
@@ -177,16 +189,27 @@ def generate_credit_dossier_files_endpoint(
 
 @router.get("/history", response_model=List[GeneratedReportRecord])
 def list_report_history_endpoint(
-    organization_id: Optional[str] = Query(None)
+    organization_id: Optional[str] = Query(None),
+    user: AuthenticatedUser = Depends(get_current_user),
 ):
     """
     Retrieves previous generated reports for an organization or all organizations.
     """
+    if organization_id:
+        verify_tenant_access(organization_id, user)
+    elif not user.is_super_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Barcha tashkilotlar hisobot tarixini faqat tizim ma'muri ko'ra oladi. organization_id parametrini ko'rsating."
+        )
     return ReportRepository.list_reports(organization_id=organization_id)
 
 
 @router.get("/{report_id}", response_model=GeneratedReportRecord)
-def get_report_metadata_endpoint(report_id: str):
+def get_report_metadata_endpoint(
+    report_id: str,
+    user: AuthenticatedUser = Depends(get_current_user),
+):
     """
     Returns metadata for a specific generated report.
     """
@@ -196,11 +219,15 @@ def get_report_metadata_endpoint(report_id: str):
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Hisobot topilmadi: {report_id}"
         )
+    verify_tenant_access(record.organization_id, user)
     return record
 
 
 @router.get("/{report_id}/download/pdf")
-def download_pdf_report_endpoint(report_id: str):
+def download_pdf_report_endpoint(
+    report_id: str,
+    user: AuthenticatedUser = Depends(get_current_user),
+):
     """
     Downloads the high-grade PDF credit dossier.
     """
@@ -210,6 +237,7 @@ def download_pdf_report_endpoint(report_id: str):
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"PDF hisobot fayli topilmadi: {report_id}"
         )
+    verify_tenant_access(record.organization_id, user)
 
     safe_title = record.organization_id.replace(" ", "_")
     filename = f"AgroHisob_Dossier_{safe_title}_{report_id[:8]}.pdf"
@@ -222,7 +250,10 @@ def download_pdf_report_endpoint(report_id: str):
 
 
 @router.get("/{report_id}/download/xlsx")
-def download_xlsx_model_endpoint(report_id: str):
+def download_xlsx_model_endpoint(
+    report_id: str,
+    user: AuthenticatedUser = Depends(get_current_user),
+):
     """
     Downloads the structured 8-sheet Excel financial model workbook.
     """
@@ -232,6 +263,7 @@ def download_xlsx_model_endpoint(report_id: str):
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Excel moliyaviy model fayli topilmadi: {report_id}"
         )
+    verify_tenant_access(record.organization_id, user)
 
     safe_title = record.organization_id.replace(" ", "_")
     filename = f"AgroHisob_Financial_Model_{safe_title}_{report_id[:8]}.xlsx"

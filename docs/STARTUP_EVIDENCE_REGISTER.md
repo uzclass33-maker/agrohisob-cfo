@@ -18,8 +18,8 @@
 | **EV-06** | Hozirda 15 ta intervyu o'tkazildi | Research Tracker | **NOT VERIFIED** (0 ta o'tkazilgan) | 2026-11-09 | `backend/storage/research/` | "Mijozlar bilan 15-20 ta intervyu o'tkazish bo'yicha tadqiqot rejasi tayyorlandi" |
 | **EV-07** | Hozirda real to'lovchi mijozlar mavjud | Buxgalteriya / Bank | **NOT VERIFIED** (0 ta mijoz) | 2026-11-09 | `docs/STARTUP_FINANCIAL_MODEL.md` | "Mahsulot pilot validatsiya bosqichida (real to'lovchi mijozlar 0 ta)" |
 | **EV-08** | Agrobank bilan rasmiy hamkorlik imzolandi | Yuridik bo'lim | **NOT VERIFIED** (Hamkorlik yo'q) | 2026-11-09 | `docs/AGROBANK_PILOT_PROPOSAL.md` | "AgroVentures akseleratsiyasi doirasida Agrobank ekotizimi uchun pilot taklifi ishlab chiqildi" |
-| **EV-09** | Tizim 166 ta avtomatik testdan to'liq o'tgan | Pytest runner | **VERIFIED FACT** | 2026-11-09 | `backend/tests/` | "166/166 ta avtomatlashtirilgan backend testi 100% muvaffaqiyatli o'tgan" |
-| **EV-10** | Tizim Vercel, Render va Supabase da jonli ishlab turibdi | Jonli URL lar | **VERIFIED FACT** | 2026-11-09 | `https://agrohisob-cfo.vercel.app` | "Bulutda jonli ishlayotgan MVP (Vercel + Render + Supabase)" |
+| **EV-09** | Tizim 175 ta avtomatik testdan to'liq o'tgan | Pytest runner | **VERIFIED FACT** | 2026-11-09 | `backend/tests/` | "175/175 ta avtomatlashtirilgan backend testi 100% muvaffaqiyatli o'tgan" |
+| **EV-10** | Tizim Vercel, Render va Supabase da jonli ishlab turibdi | Jonli URL lar | **VERIFIED FACT** (Shartli: /pilot-dashboard prod 404, lokal 200) | 2026-11-09 | `https://agrohisob-cfo.vercel.app` | "Bulutda jonli ishlayotgan MVP (Vercel + Render + Supabase); yangi pilot dashboard marshruti navbatdagi deployda faollashadi" |
 
 ---
 

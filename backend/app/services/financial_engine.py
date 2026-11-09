@@ -131,22 +131,23 @@ class FinancialEngine:
         expected_closing = initial_opening_balance + total_annual_inflows - total_annual_outflows
         reconciled = math.isclose(final_closing_balance, expected_closing, abs_tol=0.01)
 
-        # Annual DSCR: (Total Annual Operating Inflows - Total Annual Operating Outflows) / Total Annual Debt Service
+        # Annual DSCR: CFADS / Total Annual Debt Service
+        # CFADS = Operating Inflows - Operating Expenses (excluding debt principal & interest)
         net_annual_operating = total_operating_inflows - total_operating_outflows
         if total_annual_debt > 0:
             annual_dscr = round(net_annual_operating / total_annual_debt, 3)
+            # DSCR Rating based on model benchmark parameters (1.25 standard)
+            if annual_dscr >= 1.6:
+                dscr_rating = "EXCELLENT"
+            elif annual_dscr >= 1.25:
+                dscr_rating = "HEALTHY"
+            elif annual_dscr >= 1.0:
+                dscr_rating = "WATCHLIST"
+            else:
+                dscr_rating = "CRITICAL"
         else:
-            annual_dscr = 99.99  # No debt
-
-        # DSCR Rating based on banking benchmarks
-        if annual_dscr >= 1.6:
-            dscr_rating = "EXCELLENT"
-        elif annual_dscr >= 1.25:
-            dscr_rating = "HEALTHY"
-        elif annual_dscr >= 1.0:
-            dscr_rating = "WATCHLIST"
-        else:
-            dscr_rating = "CRITICAL"
+            annual_dscr = None  # No debt obligations
+            dscr_rating = "NO_DEBT"
 
         return FinancialSummaryResponse(
             organization_id=org_id,

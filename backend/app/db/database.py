@@ -65,5 +65,6 @@ def get_db():
         db.close()
 
 def init_db():
-    """Initializes tables in database."""
+    """Initializes all registered models and tables in the database."""
+    import app.models.core  # Ensure all SQLAlchemy models are registered
     Base.metadata.create_all(bind=engine)

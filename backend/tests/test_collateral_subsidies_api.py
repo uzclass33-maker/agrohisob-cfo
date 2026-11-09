@@ -141,4 +141,12 @@ def test_subsidies_pq47_and_pf82_calculators_api():
     res_pf = client.post("/api/v1/subsidies/calculate/pf82", json=pf_req)
     assert res_pf.status_code == 200
     assert res_pf.json()["is_eligible"] is True
-    assert float(res_pf.json()["compensation_pct_points"]) == 10.0
+    # PF-82 1-bandi bo'yicha shartnomada belgilangan muddatda qaytarilganda 2.5 foiz punkti
+    assert float(res_pf.json()["compensation_pct_points"]) == 2.5
+    assert "PF-82-son Farmoni" in res_pf.json()["legal_source"]
+
+    # Hosil yili 31-dekabriga qadar to'liq qaytarilganda 5.0 foiz punkti
+    pf_req["repaid_by_year_end"] = True
+    res_pf_yearend = client.post("/api/v1/subsidies/calculate/pf82", json=pf_req)
+    assert res_pf_yearend.status_code == 200
+    assert float(res_pf_yearend.json()["compensation_pct_points"]) == 5.0

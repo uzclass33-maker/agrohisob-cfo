@@ -28,7 +28,43 @@ def _ensure_storage_dir():
 def _load_metadata():
     global _initialized, _report_cache
     _ensure_storage_dir()
-    if METADATA_FILE.exists():
+    
+    # 1. First attempt to load from durable database model
+    loaded_from_db = False
+    try:
+        from app.db.database import SessionLocal
+        from app.models.core import ReportFileRecordModel
+        session = SessionLocal()
+        try:
+            db_records = session.query(ReportFileRecordModel).all()
+            if db_records:
+                _report_cache = {
+                    r.report_id: GeneratedReportRecord(
+                        report_id=r.report_id,
+                        dossier_id=r.dossier_id or "",
+                        organization_id=r.organization_id,
+                        report_title=r.report_title,
+                        created_at=r.created_at.isoformat() if r.created_at else "",
+                        status=r.status or "COMPLETED",
+                        pdf_path=r.pdf_path or "",
+                        xlsx_path=r.xlsx_path or "",
+                        pdf_url=r.pdf_url or "",
+                        xlsx_url=r.xlsx_url or "",
+                        file_hash=r.file_hash or "",
+                        file_size_bytes_pdf=r.file_size_bytes_pdf or 0,
+                        file_size_bytes_xlsx=r.file_size_bytes_xlsx or 0,
+                        calculation_version=r.calculation_version or "5.0.0"
+                    )
+                    for r in db_records
+                }
+                loaded_from_db = True
+        finally:
+            session.close()
+    except Exception:
+        loaded_from_db = False
+
+    # 2. If DB was empty or failed, load from JSON disk cache and sync to DB
+    if not loaded_from_db and METADATA_FILE.exists():
         try:
             with open(METADATA_FILE, "r", encoding="utf-8") as f:
                 data = json.load(f)
@@ -36,9 +72,75 @@ def _load_metadata():
                     item["report_id"]: GeneratedReportRecord(**item)
                     for item in data
                 }
+            # Sync loaded records into DB
+            for item in _report_cache.values():
+                _sync_to_db(item)
         except Exception:
             _report_cache = {}
     _initialized = True
+
+
+def _sync_to_db(record: GeneratedReportRecord):
+    """Synchronizes report record with durable database model."""
+    try:
+        from app.db.database import SessionLocal
+        from app.models.core import ReportFileRecordModel
+        session = SessionLocal()
+        try:
+            db_rec = session.query(ReportFileRecordModel).filter(
+                ReportFileRecordModel.report_id == record.report_id
+            ).first()
+            if not db_rec:
+                db_rec = ReportFileRecordModel(
+                    report_id=record.report_id,
+                    dossier_id=record.dossier_id,
+                    organization_id=record.organization_id,
+                    report_title=record.report_title,
+                    status=record.status,
+                    pdf_path=record.pdf_path,
+                    xlsx_path=record.xlsx_path,
+                    pdf_url=record.pdf_url,
+                    xlsx_url=record.xlsx_url,
+                    file_hash=record.file_hash,
+                    file_size_bytes_pdf=record.file_size_bytes_pdf,
+                    file_size_bytes_xlsx=record.file_size_bytes_xlsx,
+                    calculation_version=record.calculation_version,
+                )
+                session.add(db_rec)
+            else:
+                db_rec.report_title = record.report_title
+                db_rec.status = record.status
+                db_rec.pdf_path = record.pdf_path
+                db_rec.xlsx_path = record.xlsx_path
+                db_rec.file_hash = record.file_hash
+            session.commit()
+        except Exception:
+            session.rollback()
+        finally:
+            session.close()
+    except Exception:
+        pass
+
+
+def _delete_from_db(report_id: str):
+    """Deletes report record from durable database model."""
+    try:
+        from app.db.database import SessionLocal
+        from app.models.core import ReportFileRecordModel
+        session = SessionLocal()
+        try:
+            db_rec = session.query(ReportFileRecordModel).filter(
+                ReportFileRecordModel.report_id == report_id
+            ).first()
+            if db_rec:
+                session.delete(db_rec)
+                session.commit()
+        except Exception:
+            session.rollback()
+        finally:
+            session.close()
+    except Exception:
+        pass
 
 
 def _save_metadata():
@@ -62,6 +164,7 @@ class ReportRepository:
             _load_metadata()
         _report_cache[record.report_id] = record
         _save_metadata()
+        _sync_to_db(record)
         return record
 
     @classmethod
@@ -98,5 +201,6 @@ class ReportRepository:
                 except OSError:
                     pass
             _save_metadata()
+            _delete_from_db(report_id)
             return True
         return False

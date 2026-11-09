@@ -127,6 +127,7 @@ class RowOverride(BaseModel):
 class ImportPreviewResponse(BaseModel):
     """Complete summary and paginated row preview presented to user before confirmation."""
     batch_id: str
+    organization_id: Optional[str] = None
     file_name: str
     file_hash_sha256: str
     document_type: DocumentTypeEnum

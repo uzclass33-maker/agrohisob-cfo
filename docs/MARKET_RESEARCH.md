@@ -7,7 +7,7 @@
 
 ## 1. AGRAR SEKTORNING STRATEGIK KO'LAMI
 
-1. **YAIMdagi ulushi:** Qishloq, o'rmon va baliqchilik xo'jaligi O'zbekiston YaIMning taxminan **24-25%** qismini tashkil etadi (2025-2026 yillar statistikasi bo'yicha eng yirik tarmoqlardan biri).
+1. **YAIMdagi ulushi:** Qishloq, o'rmon va baliqchilik xo'jaligi O'zbekiston Respublikasi yalpi ichki mahsuloti (YAIM) tarkibida rasmiy **18.9%** ulushga ega (Statistika agentligi - stat.uz, 2025-yilgi rasmiy yakuniy hisoboti). *(Izoh: Ilgari norasmiy taxminlarda uchragan 24-25% ko'rsatkichi qayta ishlangan rasmiy statistikada 18.9% deb qayd etilgan; asossiz yuqori baholashlar chiqarib tashlandi).*
 2. **Bandlik:** Mamlakatdagi jami iqtisodiy faol aholining taxminan **26-28%** qismi bevosita agrar sohada mehnat qiladi.
 3. **Agrobiznes subyektlari soni (Stat.uz ma'lumotlari):**
    - **Fermer xo'jaliklari:** ~90,000 – 95,000 ta ro'yxatdan o'tgan faol subyekt.

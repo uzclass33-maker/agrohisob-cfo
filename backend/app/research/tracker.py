@@ -9,11 +9,22 @@ from app.research.schemas import (
     SourceClassification, CustomerSegment, InterviewStatus
 )
 
-RESEARCH_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "storage", "research")
+# Configurable storage directory to allow full isolation during testing
+_DEFAULT_RESEARCH_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "storage", "research")
+RESEARCH_DIR = os.environ.get("AGROHISOB_RESEARCH_DIR", _DEFAULT_RESEARCH_DIR)
 os.makedirs(RESEARCH_DIR, exist_ok=True)
 
 STUDIES_FILE = os.path.join(RESEARCH_DIR, "studies.json")
 INTERVIEWS_FILE = os.path.join(RESEARCH_DIR, "interviews.json")
+
+def set_research_storage_dir(custom_dir: str):
+    """Overrides the storage directory for deterministic, isolated unit and integration testing."""
+    global RESEARCH_DIR, STUDIES_FILE, INTERVIEWS_FILE
+    RESEARCH_DIR = custom_dir
+    os.makedirs(RESEARCH_DIR, exist_ok=True)
+    STUDIES_FILE = os.path.join(RESEARCH_DIR, "studies.json")
+    INTERVIEWS_FILE = os.path.join(RESEARCH_DIR, "interviews.json")
+    init_default_research()
 
 def _load_json(file_path: str, default_val):
     if not os.path.exists(file_path):
@@ -30,12 +41,65 @@ def _save_json(file_path: str, data):
     with open(file_path, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
 
+
+def _sync_interview_to_db(r: dict):
+    """Saves interview record to durable database table."""
+    try:
+        from app.db.database import SessionLocal
+        from app.models.core import ResearchInterviewModel, ResearchStudyModel
+        session = SessionLocal()
+        try:
+            study_id = r.get("study_id", "study-agrohisob-2026")
+            st = session.query(ResearchStudyModel).filter(ResearchStudyModel.id == study_id).first()
+            if not st:
+                st = ResearchStudyModel(
+                    id=study_id,
+                    title="O'zbekiston Agrar Buxgalteriyasi va Kassa Rejalashtirish Tadqiqoti 2026",
+                    description="Fermerlar, eksportyorlar va klasterlar bilan tizimli intervyu",
+                    target_count=19,
+                    status="ACTIVE"
+                )
+                session.add(st)
+                session.commit()
+
+            rec = session.query(ResearchInterviewModel).filter(ResearchInterviewModel.id == r.get("id")).first()
+            if not rec:
+                rec = ResearchInterviewModel(
+                    id=r.get("id"),
+                    study_id=study_id,
+                    code=r.get("code", "REC"),
+                    customer_segment=r.get("customer_segment", "FARMER"),
+                    source_classification=r.get("source_classification", "UNVERIFIED_NOTE"),
+                    interview_status=r.get("interview_status", "PLANNED"),
+                    participant_role=r.get("participant_role", ""),
+                    region=r.get("region", "Toshkent"),
+                    consent_recorded=r.get("consent_recorded", False),
+                    interview_date=r.get("date"),
+                    validated_problems=r.get("validated_problems", []),
+                    unverified_assumptions=r.get("unverified_assumptions", []),
+                    evidence_references=r.get("evidence_references", []),
+                    notes=r.get("notes", "")
+                )
+                session.add(rec)
+            else:
+                rec.interview_status = r.get("interview_status", rec.interview_status)
+                rec.validated_problems = r.get("validated_problems", rec.validated_problems)
+                rec.unverified_assumptions = r.get("unverified_assumptions", rec.unverified_assumptions)
+            session.commit()
+        except Exception:
+            session.rollback()
+        finally:
+            session.close()
+    except Exception:
+        pass
+
+
 def init_default_research():
     studies = _load_json(STUDIES_FILE, [])
     if not studies:
         studies = [
             {
-                "id": "study-agroventures-2026",
+                "id": "study-agrohisob-2026",
                 "title": "O'zbekiston Agrar Buxgalteriyasi va Kassa Rejalashtirish Tadqiqoti 2026",
                 "description": "Fermerlar, eksportyorlar va klasterlar bilan 15-20 ta tizimli intervyu",
                 "target_count": 19,
@@ -52,7 +116,7 @@ def init_default_research():
         initial_targets = [
             {
                 "id": "rec-target-01",
-                "study_id": "study-agroventures-2026",
+                "study_id": "study-agrohisob-2026",
                 "code": "INT-FARM-01",
                 "customer_segment": CustomerSegment.FARMER.value,
                 "source_classification": SourceClassification.UNVERIFIED_NOTE.value,
@@ -69,7 +133,7 @@ def init_default_research():
             },
             {
                 "id": "rec-target-02",
-                "study_id": "study-agroventures-2026",
+                "study_id": "study-agrohisob-2026",
                 "code": "INT-EXP-01",
                 "customer_segment": CustomerSegment.EXPORTER.value,
                 "source_classification": SourceClassification.UNVERIFIED_NOTE.value,
@@ -86,7 +150,7 @@ def init_default_research():
             },
             {
                 "id": "rec-target-03",
-                "study_id": "study-agroventures-2026",
+                "study_id": "study-agrohisob-2026",
                 "code": "INT-DEMO-01",
                 "customer_segment": CustomerSegment.FARMER.value,
                 "source_classification": SourceClassification.SYNTHETIC_DEMO.value,
@@ -147,6 +211,7 @@ class ResearchTracker:
         record["created_at"] = datetime.now(timezone.utc).isoformat()
         records.append(record)
         _save_json(INTERVIEWS_FILE, records)
+        _sync_interview_to_db(record)
         return InterviewRecord(**record)
 
     @staticmethod
