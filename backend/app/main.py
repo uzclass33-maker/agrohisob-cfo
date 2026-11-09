@@ -3,7 +3,11 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.db.database import init_db
-from app.api import routes_scenarios, routes_financials, routes_reports, routes_demo, routes_finance, routes_imports
+from app.api import (
+    routes_scenarios, routes_financials, routes_reports, 
+    routes_demo, routes_finance, routes_imports,
+    routes_dashboard, routes_insights
+)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -36,6 +40,8 @@ for prefix in ["/api", "/api/v1"]:
     app.include_router(routes_demo.router, prefix=prefix)
     app.include_router(routes_finance.router, prefix=prefix)
     app.include_router(routes_imports.router, prefix=prefix)
+    app.include_router(routes_dashboard.router, prefix=prefix)
+    app.include_router(routes_insights.router, prefix=prefix)
 
 @app.get("/")
 def root():

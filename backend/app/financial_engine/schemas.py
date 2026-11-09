@@ -250,3 +250,120 @@ class ScenarioComparisonResponse(BaseModel):
     solvency_impact: str
     risk_summary_uz: List[str]
     calculation_version: str = "2.0.0"
+
+# -------------------------------------------------------------------------
+# 7. AI-CFO Insights & Consolidated Dashboard Schemas (Assignment 4)
+# -------------------------------------------------------------------------
+class InsightTypeEnum(str, Enum):
+    LIQUIDITY_DEFICIT = "LIQUIDITY_DEFICIT"
+    SEASONAL_GAP = "SEASONAL_GAP"
+    DEBT_SERVICE_PRESSURE = "DEBT_SERVICE_PRESSURE"
+    COST_CONCENTRATION = "COST_CONCENTRATION"
+    WORKING_CAPITAL_SURPLUS = "WORKING_CAPITAL_SURPLUS"
+    REVENUE_TIMING_RISK = "REVENUE_TIMING_RISK"
+    HEALTHY_CONDITIONS = "HEALTHY_CONDITIONS"
+
+class FinancialInsight(BaseModel):
+    insight_id: str
+    organization_id: str
+    period: str
+    insight_type: InsightTypeEnum
+    severity: AlertSeverity
+    relevant_metric: str
+    supporting_values: Dict[str, Any]
+    calculation_version: str = "4.0.0"
+    explanation_uz: str
+    action_category: str
+    suggested_action_uz: str
+    generation_method: str = "DETERMINISTIC_RULE_ENGINE"  # or "LLM_ASSISTED"
+    evidence_data: List[Dict[str, Any]] = Field(default_factory=list)
+    created_at: str
+
+class DashboardOverviewKPIs(BaseModel):
+    total_inflows: Decimal
+    total_outflows: Decimal
+    net_cash_flow: Decimal
+    closing_balance: Decimal
+    operating_cash_flow: Decimal
+    debt_service: Decimal
+    dscr: Optional[Decimal] = None
+    dscr_rating: str
+    projected_min_balance: Decimal
+    min_balance_month: str
+    months_in_deficit: int
+
+class DashboardOverviewResponse(BaseModel):
+    organization_id: str
+    organization_name: str
+    organization_type: str
+    reporting_period: str
+    base_currency: str = "UZS"
+    data_source: str
+    is_synthetic: bool
+    last_data_update: str
+    kpis: DashboardOverviewKPIs
+    calculation_version: str = "4.0.0"
+
+class DashboardCashFlowResponse(BaseModel):
+    organization_id: str
+    reporting_period: str
+    currency: str = "UZS"
+    total_inflows: Decimal
+    total_outflows: Decimal
+    net_cash_flow: Decimal
+    initial_opening_balance: Decimal
+    final_closing_balance: Decimal
+    monthly_data: List[MonthlyCashFlowItem]
+    inflow_by_category: Dict[str, Decimal]
+    outflow_by_category: Dict[str, Decimal]
+    reconciled_with_engine: bool = True
+
+class DashboardForecastResponse(BaseModel):
+    organization_id: str
+    fiscal_year: int
+    model_version: str = "2.0.0"
+    forecast_generation_date: str
+    historical_months_count: int
+    forecast_months_count: int
+    initial_cash_balance: Decimal
+    final_closing_balance: Decimal
+    lowest_cash_point: Decimal
+    lowest_cash_month: str
+    months_in_deficit: int
+    annual_dscr: Optional[Decimal]
+    dscr_rating: str
+    monthly_forecast: List[MonthlyForecastItem]
+    assumptions: Dict[str, Any]
+    liquidity_warnings_count: int
+
+class DashboardDebtResponse(BaseModel):
+    organization_id: str
+    total_principal: Decimal
+    total_interest: Decimal
+    total_debt_service: Decimal
+    annual_dscr: Optional[Decimal]
+    dscr_risk_tier: str
+    dscr_interpretation_uz: str
+    next_payment_date: str
+    next_payment_amount: Decimal
+    loan_schedules: List[Dict[str, Any]]
+
+class DashboardRisksResponse(BaseModel):
+    organization_id: str
+    risks_count: int
+    critical_count: int
+    high_count: int
+    medium_count: int
+    low_count: int
+    risks: List[Dict[str, Any]]
+
+class AIInsightsResponse(BaseModel):
+    organization_id: str
+    financial_health_summary_uz: str
+    key_findings_uz: List[str]
+    insights: List[FinancialInsight]
+    generation_method: str = "DETERMINISTIC_RULE_ENGINE"
+    model_version: str = "4.0.0"
+    is_llm_used: bool = False
+    disclaimer_uz: str
+

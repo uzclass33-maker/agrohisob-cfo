@@ -9,6 +9,7 @@ from app.financial_engine.dscr import calculate_dscr
 from app.financial_engine.forecasting import calculate_seasonal_forecast
 from app.financial_engine.scenarios import run_scenario_analysis
 from app.financial_engine.risk import detect_monthly_liquidity_risks
+from app.financial_engine.insights import InsightsEngine
 
 __all__ = [
     "process_historical_cashflow",
@@ -17,4 +18,5 @@ __all__ = [
     "calculate_seasonal_forecast",
     "run_scenario_analysis",
     "detect_monthly_liquidity_risks",
+    "InsightsEngine",
 ]

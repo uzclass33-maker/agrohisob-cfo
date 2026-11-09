@@ -186,3 +186,111 @@ export async function fetchImportHistory(organizationId: string = 'demo-org-agro
   }
   return res.json();
 }
+
+// -------------------------------------------------------------------------
+// ASSIGNMENT 4 API CLIENT FUNCTIONS: AI-CFO Financial Dashboard
+// -------------------------------------------------------------------------
+export async function fetchDashboardOverview(organizationId: string, period: string = '2026'): Promise<any> {
+  const res = await fetch(`${API_BASE}/api/v1/dashboard/overview?organization_id=${encodeURIComponent(organizationId)}&reporting_period=${encodeURIComponent(period)}`, {
+    cache: 'no-store'
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.detail || `Failed to fetch overview: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function fetchDashboardCashFlow(organizationId: string, period: string = '2026'): Promise<any> {
+  const res = await fetch(`${API_BASE}/api/v1/dashboard/cashflow?organization_id=${encodeURIComponent(organizationId)}&reporting_period=${encodeURIComponent(period)}`, {
+    cache: 'no-store'
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.detail || `Failed to fetch cashflow: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function fetchDashboardForecast(organizationId: string, fiscalYear: number = 2026): Promise<any> {
+  const res = await fetch(`${API_BASE}/api/v1/dashboard/forecast?organization_id=${encodeURIComponent(organizationId)}&fiscal_year=${fiscalYear}`, {
+    cache: 'no-store'
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.detail || `Failed to fetch forecast: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function fetchDashboardDebt(organizationId: string): Promise<any> {
+  const res = await fetch(`${API_BASE}/api/v1/dashboard/debt?organization_id=${encodeURIComponent(organizationId)}`, {
+    cache: 'no-store'
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.detail || `Failed to fetch debt analytics: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function fetchDashboardRisks(organizationId: string): Promise<any> {
+  const res = await fetch(`${API_BASE}/api/v1/dashboard/risks?organization_id=${encodeURIComponent(organizationId)}`, {
+    cache: 'no-store'
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.detail || `Failed to fetch risk monitor: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function simulateDashboardScenario(params: {
+  organization_id: string;
+  scenario_type?: string;
+  revenue_change_pct: number;
+  cost_change_pct: number;
+  collection_delay_months: number;
+  interest_rate_delta_pct: number;
+}): Promise<any> {
+  const res = await fetch(`${API_BASE}/api/v1/dashboard/scenarios`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(params),
+    cache: 'no-store'
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.detail || `Failed to simulate scenario: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function fetchAIInsights(organizationId: string, requestLlm: boolean = false): Promise<any> {
+  const res = await fetch(`${API_BASE}/api/v1/insights?organization_id=${encodeURIComponent(organizationId)}&request_llm=${requestLlm}`, {
+    cache: 'no-store'
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.detail || `Failed to fetch AI insights: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function explainInsightAPI(params: {
+  organization_id: string;
+  insight_id?: string;
+  request_llm?: boolean;
+}): Promise<any> {
+  const res = await fetch(`${API_BASE}/api/v1/insights/explain`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(params),
+    cache: 'no-store'
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.detail || `Failed to explain insight: ${res.statusText}`);
+  }
+  return res.json();
+}

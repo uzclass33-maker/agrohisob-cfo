@@ -162,3 +162,209 @@ export interface ScenarioComparisonItem {
   annual_dscr: number | null;
   solvency_status: string;
 }
+
+// -------------------------------------------------------------------------
+// ASSIGNMENT 4 TYPES: AI-CFO Financial Dashboard, Intelligence & Analytics
+// -------------------------------------------------------------------------
+export interface DashboardOverviewKPIs {
+  total_inflows: number;
+  total_outflows: number;
+  net_cash_flow: number;
+  closing_balance: number;
+  operating_cash_flow: number;
+  debt_service: number;
+  dscr: number | null;
+  dscr_rating: string;
+  projected_min_balance: number;
+  min_balance_month: string;
+  months_in_deficit: number;
+}
+
+export interface DashboardOverviewResponse {
+  organization_id: string;
+  organization_name: string;
+  organization_type: string;
+  reporting_period: string;
+  base_currency: string;
+  data_source: 'SYNTHETIC_BENCHMARK' | 'BANK_STATEMENT_IMPORT' | string;
+  is_synthetic: boolean;
+  last_data_update: string;
+  kpis: DashboardOverviewKPIs;
+  calculation_version: string;
+}
+
+export interface DashboardCashFlowItem {
+  month_number: number;
+  month_name: string;
+  opening_balance: number;
+  total_inflows: number;
+  total_outflows: number;
+  net_cash_flow: number;
+  closing_balance: number;
+  is_deficit: boolean;
+  categories: Record<string, number>;
+}
+
+export interface DashboardCashFlowResponse {
+  organization_id: string;
+  reporting_period: string;
+  currency: string;
+  total_inflows: number;
+  total_outflows: number;
+  net_cash_flow: number;
+  initial_opening_balance: number;
+  final_closing_balance: number;
+  monthly_data: DashboardCashFlowItem[];
+  inflow_by_category: Record<string, number>;
+  outflow_by_category: Record<string, number>;
+  reconciled_with_engine: boolean;
+}
+
+export interface MonthlyForecastItem {
+  month_number: number;
+  month_name: string;
+  opening_balance: number;
+  projected_inflows: number;
+  projected_operating_outflows: number;
+  debt_service: number;
+  total_outflows: number;
+  net_cash_flow: number;
+  closing_balance: number;
+  cfads: number;
+  monthly_dscr: number | null;
+  is_deficit: boolean;
+  is_below_buffer: boolean;
+  alerts: LiquidityAlert[];
+}
+
+export interface DashboardForecastResponse {
+  organization_id: string;
+  fiscal_year: number;
+  model_version: string;
+  forecast_generation_date: string;
+  historical_months_count: number;
+  forecast_months_count: number;
+  initial_cash_balance: number;
+  final_closing_balance: number;
+  lowest_cash_point: number;
+  lowest_cash_month: string;
+  months_in_deficit: number;
+  annual_dscr: number | null;
+  dscr_rating: string;
+  monthly_forecast: MonthlyForecastItem[];
+  assumptions: Record<string, any>;
+  liquidity_warnings_count: number;
+}
+
+export interface LoanScheduleSummaryItem {
+  lender_name: string;
+  loan_type: string;
+  contract_number: string;
+  principal_amount: number;
+  annual_interest_rate: number;
+  monthly_payment: number;
+  start_date: string;
+  maturity_date: string;
+  collateral: string;
+}
+
+export interface DashboardDebtResponse {
+  organization_id: string;
+  total_principal: number;
+  total_interest: number;
+  total_debt_service: number;
+  annual_dscr: number | null;
+  dscr_risk_tier: string;
+  dscr_interpretation_uz: string;
+  next_payment_date: string;
+  next_payment_amount: number;
+  loan_schedules: LoanScheduleSummaryItem[];
+}
+
+export interface DashboardRiskItem {
+  id: string;
+  title: string;
+  severity: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
+  affected_period: string;
+  metric_value: string;
+  trigger_rule: string;
+  explanation_uz: string;
+  business_response_uz: string;
+}
+
+export interface DashboardRisksResponse {
+  organization_id: string;
+  risks_count: number;
+  critical_count: number;
+  high_count: number;
+  medium_count: number;
+  low_count: number;
+  risks: DashboardRiskItem[];
+}
+
+export interface FinancialInsight {
+  insight_id: string;
+  insight_type: string;
+  severity: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW' | 'INFO';
+  headline_uz: string;
+  core_message_uz: string;
+  evidence_bullets_uz: string[];
+  recommended_action_uz: string;
+  supporting_metrics: Record<string, any>;
+  is_verified_fact: boolean;
+  generation_method: string;
+}
+
+export interface AIInsightsResponse {
+  organization_id: string;
+  financial_health_summary_uz: string;
+  key_findings_uz: string[];
+  insights: FinancialInsight[];
+  generation_method: string;
+  model_version: string;
+  is_llm_used: boolean;
+  disclaimer_uz: string;
+}
+
+export interface ScenarioSimulationInput {
+  organization_id: string;
+  scenario_type: 'BASE' | 'OPTIMISTIC' | 'PESSIMISTIC' | 'CUSTOM';
+  revenue_change_pct: number;
+  cost_change_pct: number;
+  collection_delay_months: number;
+  interest_rate_delta_pct: number;
+}
+
+export interface ScenarioComparisonResponse {
+  scenario_type: 'BASE' | 'OPTIMISTIC' | 'PESSIMISTIC' | 'CUSTOM';
+  adjustments_applied: {
+    revenue_change_pct: number;
+    cost_change_pct: number;
+    collection_delay_months: number;
+    interest_rate_delta_pct: number;
+  };
+  baseline: {
+    total_annual_inflows: number;
+    total_annual_outflows: number;
+    net_annual_cash_flow: number;
+    final_closing_balance: number;
+    lowest_cash_point: number;
+    annual_dscr: number | null;
+    months_in_deficit: number;
+    monthly_forecast: MonthlyForecastItem[];
+  };
+  stressed: {
+    total_annual_inflows: number;
+    total_annual_outflows: number;
+    net_annual_cash_flow: number;
+    final_closing_balance: number;
+    lowest_cash_point: number;
+    annual_dscr: number | null;
+    months_in_deficit: number;
+    monthly_forecast: MonthlyForecastItem[];
+  };
+  variance_net_cash_flow: number;
+  variance_closing_balance: number;
+  variance_dscr: number | null;
+  solvency_impact: string;
+}
