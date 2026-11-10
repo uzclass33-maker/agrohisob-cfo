@@ -1744,12 +1744,18 @@ function DashboardContent() {
                   disabled={llmLoading}
                   className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-xs font-bold transition-all border ${
                     aiInsights.is_llm_used
-                      ? 'bg-agro-600 text-white border-agro-500 shadow-md'
+                      ? 'bg-agro-600 text-white border-agro-500 shadow-md hover:bg-agro-700'
                       : 'bg-white/10 text-slate-200 border-white/20 hover:bg-white/20'
                   }`}
                 >
-                  <Sparkles className={`w-4 h-4 ${llmLoading ? 'animate-spin' : ''}`} />
-                  <span>{aiInsights.is_llm_used ? "LLM Tushuntirishi Faol" : "LLM Izohini Yoqish (Maxfiy)"}</span>
+                  <Sparkles className={`w-4 h-4 ${llmLoading ? 'animate-spin text-harvest-300' : 'text-harvest-400'}`} />
+                  <span>
+                    {llmLoading
+                      ? "DeepSeek V3 tahlil qilmoqda..."
+                      : aiInsights.is_llm_used
+                      ? "DeepSeek V3 Xulosasi Faol (Yangilash)"
+                      : "DeepSeek V3 AI-CFO Xulosasini Olish"}
+                  </span>
                 </button>
               </div>
 
@@ -1764,7 +1770,7 @@ function DashboardContent() {
                   Asosiy Strategik Xulosalar:
                 </span>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
-                  {aiInsights.key_findings_uz.map((finding, idx) => (
+                  {(aiInsights.key_findings_uz || []).map((finding, idx) => (
                     <div key={idx} className="flex items-start space-x-2 bg-white/5 p-2.5 rounded-lg border border-white/10">
                       <span className="text-harvest-400 font-bold">•</span>
                       <span className="text-slate-200">{finding}</span>
@@ -1787,62 +1793,78 @@ function DashboardContent() {
             {/* Deep-Dive Insight Cards */}
             <div className="space-y-4">
               <h4 className="text-sm font-bold text-slate-900">
-                Isbotlangan Tahliliy Dalillar va Tavsiyalar ({aiInsights.insights.length} ta xulosa)
+                Isbotlangan Tahliliy Dalillar va Tavsiyalar ({(aiInsights.insights || []).length} ta xulosa)
               </h4>
 
-              {aiInsights.insights.map((insight) => (
-                <div 
-                  key={insight.insight_id}
-                  className="bg-white p-5 rounded-xl border border-slate-200/80 shadow-card space-y-4"
-                >
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
-                    <div className="flex items-center space-x-2.5">
-                      {getSeverityBadge(insight.severity)}
-                      <h5 className="font-bold text-slate-900 text-sm">{insight.headline_uz}</h5>
+              {(aiInsights.insights || []).map((insight) => {
+                const headline = insight.headline_uz || (insight as any).explanation_uz?.slice(0, 60) || "Moliyaviy Xulosa";
+                const coreMessage = insight.core_message_uz || (insight as any).explanation_uz || "";
+                const bullets: string[] = (insight.evidence_bullets_uz && insight.evidence_bullets_uz.length > 0)
+                  ? insight.evidence_bullets_uz
+                  : ((insight as any).evidence_data || []).map((e: any) => typeof e === 'object' ? Object.entries(e).map(([k, v]) => `${k}: ${v}`).join(', ') : String(e));
+                const action = insight.recommended_action_uz || (insight as any).suggested_action_uz || "";
+                const metrics = insight.supporting_metrics || (insight as any).supporting_values || {};
+
+                return (
+                  <div 
+                    key={insight.insight_id}
+                    className="bg-white p-5 rounded-xl border border-slate-200/80 shadow-card space-y-4"
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                      <div className="flex items-center space-x-2.5">
+                        {getSeverityBadge(insight.severity)}
+                        <h5 className="font-bold text-slate-900 text-sm">{headline}</h5>
+                      </div>
+                      <span className="text-xs px-2 py-0.5 rounded font-mono bg-slate-100 text-slate-700">
+                        {insight.insight_type}
+                      </span>
                     </div>
-                    <span className="text-xs px-2 py-0.5 rounded font-mono bg-slate-100 text-slate-700">
-                      {insight.insight_type}
-                    </span>
-                  </div>
 
-                  {/* Core Message */}
-                  <p className="text-xs text-slate-800 leading-relaxed">
-                    {insight.core_message_uz}
-                  </p>
+                    {/* Core Message */}
+                    <p className="text-xs text-slate-800 leading-relaxed">
+                      {coreMessage}
+                    </p>
 
-                  {/* Evidence Bullets & Verifiable Data Table */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-                    <div className="space-y-2">
-                      <span className="font-bold text-slate-700 block">Isbotlangan Raqamli Faktlar:</span>
-                      <ul className="space-y-1 list-disc list-inside text-slate-600">
-                        {insight.evidence_bullets_uz.map((bullet, bIdx) => (
-                          <li key={bIdx}>{bullet}</li>
+                    {/* Evidence Bullets & Verifiable Data Table */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                      <div className="space-y-2">
+                        <span className="font-bold text-slate-700 block">Isbotlangan Raqamli Faktlar:</span>
+                        {bullets.length > 0 ? (
+                          <ul className="space-y-1 list-disc list-inside text-slate-600">
+                            {bullets.map((bullet, bIdx) => (
+                              <li key={bIdx}>{bullet}</li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p className="text-slate-500 italic text-[11px]">Barcha ko&apos;rsatkichlar kassa kitobi va hisobotlarga asoslangan.</p>
+                        )}
+                      </div>
+
+                      <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl space-y-1.5">
+                        <span className="font-bold text-emerald-900 flex items-center space-x-1.5">
+                          <CheckCircle2 className="w-4 h-4 text-agro-600" />
+                          <span>Boshqaruv Tavsiyasi (CFO Tavsiyasi):</span>
+                        </span>
+                        <p className="text-emerald-950 leading-relaxed text-xs">
+                          {action}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Supporting Metrics Badges */}
+                    {Object.keys(metrics).length > 0 && (
+                      <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100 text-[11px] text-slate-500">
+                        <span className="font-semibold">Hisoblangan parametrlar:</span>
+                        {Object.entries(metrics).map(([k, v]) => (
+                          <span key={k} className="px-2 py-0.5 rounded bg-slate-100 text-slate-800 font-mono">
+                            {k}: {String(v)}
+                          </span>
                         ))}
-                      </ul>
-                    </div>
-
-                    <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl space-y-1.5">
-                      <span className="font-bold text-emerald-900 flex items-center space-x-1.5">
-                        <CheckCircle2 className="w-4 h-4 text-agro-600" />
-                        <span>Boshqaruv Tavsiyasi (CFO Tavsiyasi):</span>
-                      </span>
-                      <p className="text-emerald-950 leading-relaxed text-xs">
-                        {insight.recommended_action_uz}
-                      </p>
-                    </div>
+                      </div>
+                    )}
                   </div>
-
-                  {/* Supporting Metrics Badges */}
-                  <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100 text-[11px] text-slate-500">
-                    <span className="font-semibold">Hisoblangan parametrlar:</span>
-                    {Object.entries(insight.supporting_metrics).map(([k, v]) => (
-                      <span key={k} className="px-2 py-0.5 rounded bg-slate-100 text-slate-800 font-mono">
-                        {k}: {String(v)}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}

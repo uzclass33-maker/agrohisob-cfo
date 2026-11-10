@@ -57,6 +57,10 @@ class Settings(BaseSettings):
     PREFERENTIAL_AGRO_RATE: float = 0.14   # 10-14% state preferential fund rate (PQ-47/Agrofin)
     MIN_ACCEPTABLE_DSCR: float = 1.25      # Standard banking debt service coverage threshold
 
+    # AI & LLM Settings
+    DEEPSEEK_API_KEY: str = os.getenv("DEEPSEEK_API_KEY", "")
+    DEEPSEEK_MODEL: str = os.getenv("DEEPSEEK_MODEL", "deepseek-chat")
+
     def validate_production_security(self) -> None:
         """Logs warnings or raises issues if unsafe defaults are used in production."""
         if self.ENVIRONMENT.lower() == "production":

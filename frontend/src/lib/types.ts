@@ -306,13 +306,19 @@ export interface FinancialInsight {
   insight_id: string;
   insight_type: string;
   severity: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW' | 'INFO';
-  headline_uz: string;
-  core_message_uz: string;
-  evidence_bullets_uz: string[];
-  recommended_action_uz: string;
-  supporting_metrics: Record<string, any>;
-  is_verified_fact: boolean;
-  generation_method: string;
+  headline_uz?: string;
+  core_message_uz?: string;
+  evidence_bullets_uz?: string[];
+  recommended_action_uz?: string;
+  supporting_metrics?: Record<string, any>;
+  is_verified_fact?: boolean;
+  generation_method?: string;
+  explanation_uz?: string;
+  suggested_action_uz?: string;
+  supporting_values?: Record<string, any>;
+  evidence_data?: any[];
+  period?: string;
+  created_at?: string;
 }
 
 export interface AIInsightsResponse {

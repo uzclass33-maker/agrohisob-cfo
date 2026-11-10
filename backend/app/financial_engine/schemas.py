@@ -278,6 +278,12 @@ class FinancialInsight(BaseModel):
     generation_method: str = "DETERMINISTIC_RULE_ENGINE"  # or "LLM_ASSISTED"
     evidence_data: List[Dict[str, Any]] = Field(default_factory=list)
     created_at: str
+    # Frontend compatibility & LLM enrichment fields
+    headline_uz: Optional[str] = None
+    core_message_uz: Optional[str] = None
+    evidence_bullets_uz: List[str] = Field(default_factory=list)
+    recommended_action_uz: Optional[str] = None
+    supporting_metrics: Dict[str, Any] = Field(default_factory=dict)
 
 class DashboardOverviewKPIs(BaseModel):
     total_inflows: Decimal

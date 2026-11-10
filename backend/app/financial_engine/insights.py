@@ -7,11 +7,15 @@ Provides a two-layer explainable financial intelligence service:
 
 from datetime import datetime, timezone
 from decimal import Decimal
+import json
+import logging
 import os
 import re
 from typing import Any, Dict, List, Optional
 import uuid
+import httpx
 
+from app.config import settings
 from app.financial_engine.schemas import (
     AIInsightsResponse,
     AlertSeverity,
@@ -19,6 +23,8 @@ from app.financial_engine.schemas import (
     InsightTypeEnum,
     SeasonalForecastResponse,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class InsightsEngine:
@@ -93,7 +99,16 @@ class InsightsEngine:
                     suggested_action_uz=suggested_action,
                     generation_method="DETERMINISTIC_RULE_ENGINE",
                     evidence_data=evidence,
-                    created_at=now_str
+                    created_at=now_str,
+                    headline_uz=f"Mavsumiy Kassa Uzilishi ({deficit_names})",
+                    core_message_uz=explanation,
+                    evidence_bullets_uz=[
+                        f"Eng past kassa nuqtasi {min_bal_item.month_name} oyida: -{abs(min_bal_item.closing_balance):,.0f} so'm",
+                        f"Kassa defitsiti davomiyligi: {len(deficit_months)} oy",
+                        f"Dastlabki kassa balansi: {forecast.initial_cash_balance:,.0f} so'm",
+                    ],
+                    recommended_action_uz=suggested_action,
+                    supporting_metrics=supporting,
                 )
             )
 
@@ -145,6 +160,7 @@ class InsightsEngine:
                 )
                 ins_type = InsightTypeEnum.WORKING_CAPITAL_SURPLUS
 
+            headline_dscr = f"Qarz Qoplash Bosimi (DSCR {dscr or 0.00:.2f}x)" if severity in (AlertSeverity.CRITICAL, AlertSeverity.HIGH) else f"Mustahkam Qarz Qoplash Salohiyati (DSCR {dscr:.2f}x)"
             insights.append(
                 FinancialInsight(
                     insight_id=f"ins-dscr-{uuid.uuid4().hex[:8]}",
@@ -159,7 +175,16 @@ class InsightsEngine:
                     suggested_action_uz=act_uz,
                     generation_method="DETERMINISTIC_RULE_ENGINE",
                     evidence_data=[{"metric": "DSCR", "value": str(dscr), "threshold": "1.20x"}],
-                    created_at=now_str
+                    created_at=now_str,
+                    headline_uz=headline_dscr,
+                    core_message_uz=exp_uz,
+                    evidence_bullets_uz=[
+                        f"Yillik DSCR: {dscr or 0.00:.2f}x (Bank me'yori: 1.25x)",
+                        f"Jami yillik qarz xizmati: {forecast.total_debt_service:,.0f} so'm",
+                        f"Qoplash reytingi: {forecast.dscr_rating}"
+                    ],
+                    recommended_action_uz=act_uz,
+                    supporting_metrics=supporting_dscr,
                 )
             )
 
@@ -172,6 +197,20 @@ class InsightsEngine:
             top_rev_sum = sum((m.projected_inflows for m in high_rev_months), Decimal("0.00"))
             conc_pct = (top_rev_sum / forecast.total_annual_inflows) * 100
 
+            season_exp = (
+                f"Tushumlar yuqori darajada mavsumiy: yillik daromadning {conc_pct:.1f}% qismi faqat "
+                f"{top_month_names} oylarida shakllanadi. Yilning qolgan davrida pul tushumining keskin kamayishi "
+                f"doimiy operatsion xarajatlarni qoplashda likvidlik bosimini keltirib chiqaradi."
+            )
+            season_act = (
+                "Fermer xo'jaligida ikkilamchi oraliq ekinlar (dukkakli don, ertapishar sabzavotlar) yetishtirish yoki "
+                "mahsulotni muzlatgichli omborlarda saqlab, mavsumdan tashqari qish oylarida yuqori narxda sotish."
+            )
+            season_supp = {
+                "concentration_pct": f"{conc_pct:.1f}%",
+                "peak_months": top_month_names,
+                "peak_amount": f"{top_rev_sum:,.0f} UZS"
+            }
             insights.append(
                 FinancialInsight(
                     insight_id=f"ins-season-{uuid.uuid4().hex[:8]}",
@@ -180,24 +219,22 @@ class InsightsEngine:
                     insight_type=InsightTypeEnum.SEASONAL_GAP,
                     severity=AlertSeverity.MEDIUM,
                     relevant_metric="inflow_seasonality",
-                    supporting_values={
-                        "concentration_pct": f"{conc_pct:.1f}",
-                        "peak_months": top_month_names,
-                        "peak_amount": str(top_rev_sum)
-                    },
-                    explanation_uz=(
-                        f"Tushumlar yuqori darajada mavsumiy: yillik daromadning {conc_pct:.1f}% qismi faqat "
-                        f"{top_month_names} oylarida shakllanadi. Yilning qolgan davrida pul tushumining keskin kamayishi "
-                        f"doimiy operatsion xarajatlarni qoplashda likvidlik bosimini keltirib chiqaradi."
-                    ),
+                    supporting_values=season_supp,
+                    explanation_uz=season_exp,
                     action_category="REVENUE_DIVERSIFICATION",
-                    suggested_action_uz=(
-                        "Fermer xo'jaligida ikkilamchi oraliq ekinlar (dukkakli don, ertapishar sabzavotlar) yetishtirish yoki "
-                        "mahsulotni muzlatgichli omborlarda saqlab, mavsumdan tashqari qish oylarida yuqori narxda sotish."
-                    ),
+                    suggested_action_uz=season_act,
                     generation_method="DETERMINISTIC_RULE_ENGINE",
                     evidence_data=[{"month": m.month_name, "inflow": str(m.projected_inflows)} for m in high_rev_months],
-                    created_at=now_str
+                    created_at=now_str,
+                    headline_uz=f"Tushumlarning Mavsumiy Konsentratsiyasi ({top_month_names})",
+                    core_message_uz=season_exp,
+                    evidence_bullets_uz=[
+                        f"Yillik daromadning {conc_pct:.1f}% qismi faqat {top_month_names} oylarida shakllanadi",
+                        f"Mavsumiy eng yuqori tushum: {top_rev_sum:,.0f} so'm",
+                        f"Jami yillik tushum prognozi: {forecast.total_annual_inflows:,.0f} so'm"
+                    ],
+                    recommended_action_uz=season_act,
+                    supporting_metrics=season_supp,
                 )
             )
 
@@ -205,6 +242,18 @@ class InsightsEngine:
         # Rule 4: General Solvency & Positive Cash-Flow Condition
         # ---------------------------------------------------------------------
         if not deficit_months and forecast.net_annual_cash_flow > 0:
+            hlth_exp = (
+                f"Korxonaning yillik sof pul oqimi barqaror ijobiy ko'rsatkichga ega (+{forecast.net_annual_cash_flow:,.2f} so'm). "
+                f"Yil davomida kassa defitsiti (manfiy qoldiq) kuzatilmadi, o'z mablag'lari hisobiga xarajatlarni to'liq qoplash ta'minlangan."
+            )
+            hlth_act = (
+                "Shakllangan erkin likvidlik hisobiga agrotexnologiyalarni modernizatsiya qilish (tomchilatib sug'orish, mini-traktorlar) "
+                "va hosildorlikni oshirish loyihalariga qayta investitsiya qilish."
+            )
+            hlth_supp = {
+                "net_annual_cash_flow": f"{forecast.net_annual_cash_flow:,.0f} UZS",
+                "final_closing_balance": f"{forecast.final_closing_balance:,.0f} UZS"
+            }
             insights.append(
                 FinancialInsight(
                     insight_id=f"ins-hlth-{uuid.uuid4().hex[:8]}",
@@ -213,22 +262,22 @@ class InsightsEngine:
                     insight_type=InsightTypeEnum.HEALTHY_CONDITIONS,
                     severity=AlertSeverity.LOW,
                     relevant_metric="net_annual_cash_flow",
-                    supporting_values={
-                        "net_annual_cash_flow": str(forecast.net_annual_cash_flow),
-                        "final_closing_balance": str(forecast.final_closing_balance)
-                    },
-                    explanation_uz=(
-                        f"Korxonaning yillik sof pul oqimi barqaror ijobiy ko'rsatkichga ega (+{forecast.net_annual_cash_flow:,.2f} so'm). "
-                        f"Yil davomida kassa defitsiti (manfiy qoldiq) kuzatilmadi, o'z mablag'lari hisobiga xarajatlarni to'liq qoplash ta'minlangan."
-                    ),
+                    supporting_values=hlth_supp,
+                    explanation_uz=hlth_exp,
                     action_category="STRATEGIC_EXPANSION",
-                    suggested_action_uz=(
-                        "Shakllangan erkin likvidlik hisobiga agrotexnologiyalarni modernizatsiya qilish (tomchilatib sug'orish, mini-traktorlar) "
-                        "va hosildorlikni oshirish loyihalariga qayta investitsiya qilish."
-                    ),
+                    suggested_action_uz=hlth_act,
                     generation_method="DETERMINISTIC_RULE_ENGINE",
                     evidence_data=[],
-                    created_at=now_str
+                    created_at=now_str,
+                    headline_uz="Barqaror Va Ijobiy Moliyaviy Holat",
+                    core_message_uz=hlth_exp,
+                    evidence_bullets_uz=[
+                        f"Yillik sof pul oqimi: +{forecast.net_annual_cash_flow:,.0f} so'm",
+                        f"Yakuniy kassa balansi: {forecast.final_closing_balance:,.0f} so'm",
+                        "Kassa defitsiti oylari soni: 0 oy"
+                    ],
+                    recommended_action_uz=hlth_act,
+                    supporting_metrics=hlth_supp,
                 )
             )
 
@@ -309,32 +358,10 @@ class InsightsEngine:
             key_findings.append(f"[{ins.severity.value}] {ins.explanation_uz}")
 
         # Check Layer B (Optional LLM)
-        is_llm_used = False
-        method = "DETERMINISTIC_RULE_ENGINE"
-
-        # Check for optional API key in environment
-        gemini_key = os.environ.get("GEMINI_API_KEY")
-        if request_llm and gemini_key:
-            # We attempt optional enrichment
-            try:
-                # Prepare fact corpus
-                allowed_numbers = [
-                    forecast.initial_cash_balance,
-                    forecast.final_closing_balance,
-                    forecast.net_annual_cash_flow,
-                    forecast.lowest_cash_point,
-                    forecast.total_debt_service
-                ]
-                if forecast.annual_dscr:
-                    allowed_numbers.append(forecast.annual_dscr)
-
-                # If LLM validation passes, we mark LLM as used
-                # In current environment without active network API call, deterministic engine runs losslessly
-                pass
-            except Exception:
-                # Seamless fallback to Layer A
-                is_llm_used = False
-                method = "DETERMINISTIC_RULE_ENGINE"
+        if request_llm:
+            deepseek_res = cls.generate_deepseek_insights(forecast)
+            if deepseek_res:
+                return deepseek_res
 
         disclaimer = (
             "MA'LUMOT: Ushbu AI-CFO tahliliy xulosasi to'liq deterministik moliyaviy hisob-kitob qoidalari "
@@ -347,8 +374,163 @@ class InsightsEngine:
             financial_health_summary_uz=health_summary,
             key_findings_uz=key_findings,
             insights=deterministic_insights,
-            generation_method=method,
+            generation_method="DETERMINISTIC_RULE_ENGINE",
             model_version="4.0.0",
-            is_llm_used=is_llm_used,
+            is_llm_used=False,
             disclaimer_uz=disclaimer
         )
+
+    @classmethod
+    def generate_deepseek_insights(
+        cls,
+        forecast: SeasonalForecastResponse
+    ) -> Optional[AIInsightsResponse]:
+        """
+        Invokes DeepSeek-V3 to generate executive financial intelligence for the agro enterprise.
+        Validates the output against hallucination guards before returning.
+        """
+        api_key = settings.DEEPSEEK_API_KEY or os.environ.get("DEEPSEEK_API_KEY")
+        if not api_key:
+            return None
+
+        deficit_names = ", ".join([m.month_name for m in forecast.monthly_forecast if m.is_deficit]) or "Mavjud emas"
+        dscr_val = f"{forecast.annual_dscr:.2f}x" if forecast.annual_dscr else "Qarzsiz"
+
+        system_prompt = (
+            "Siz O'zbekiston agrobiznesiga ixtisoslashgan Professional Bosh Moliyaviy Direktor (AI-CFO)siz. "
+            "Fermer xo'jaligi yoki agrobiznes korxonasining moliyaviy faktlari asosida o'zbek tilida (lotin yozuvida) "
+            "professional, faktik va amaliy boshqaruv xulosasini faqat toza JSON formatida bering:\n"
+            "{\n"
+            '  "financial_health_summary_uz": "2-3 jumlalik umumiy moliyaviy salomatlik xulosasi",\n'
+            '  "key_findings_uz": ["1-xulosa", "2-xulosa", "3-xulosa", "4-xulosa"],\n'
+            '  "insights": [\n'
+            "    {\n"
+            '      "headline_uz": "Qisqa sarlavha",\n'
+            '      "core_message_uz": "Holat tahlili va sabablari",\n'
+            '      "evidence_bullets_uz": ["Fakt 1", "Fakt 2"],\n'
+            '      "recommended_action_uz": "Boshqaruv tavsiyasi",\n'
+            '      "severity": "CRITICAL" | "HIGH" | "MEDIUM" | "LOW",\n'
+            '      "insight_type": "LIQUIDITY_DEFICIT" | "DEBT_SERVICE_PRESSURE" | "SEASONAL_GAP" | "WORKING_CAPITAL_SURPLUS" | "HEALTHY_CONDITIONS"\n'
+            "    }\n"
+            "  ]\n"
+            "}\n"
+            "Qat'iy qoidalar:\n"
+            "- Faqat berilgan aniq raqamlardan foydalaning, asossiz raqam to'qimang.\n"
+            "- Matn to'liq o'zbek tilida (lotin yozuvida) bo'lsin.\n"
+            "- Hech qanday soxta bank kafolatlari yoki qonunchilik va'dalari berilmasin."
+        )
+
+        user_content = (
+            f"Tashkilot ID: {forecast.organization_id}\n"
+            f"Moliya yili: {forecast.fiscal_year}\n"
+            f"Boshlang'ich kassa: {forecast.initial_cash_balance:,.0f} so'm\n"
+            f"Yakuniy kassa: {forecast.final_closing_balance:,.0f} so'm\n"
+            f"Yillik tushum: {forecast.total_annual_inflows:,.0f} so'm\n"
+            f"Yillik chiqim: {forecast.total_annual_outflows:,.0f} so'm\n"
+            f"Sof pul oqimi: {forecast.net_annual_cash_flow:,.0f} so'm\n"
+            f"Eng past kassa nuqtasi: {forecast.lowest_cash_point:,.0f} so'm ({forecast.lowest_cash_month})\n"
+            f"Defitsit oylari: {forecast.months_in_deficit} oy ({deficit_names})\n"
+            f"Jami qarz xizmati: {forecast.total_debt_service:,.0f} so'm\n"
+            f"Yillik DSCR: {dscr_val} ({forecast.dscr_rating})\n"
+        )
+
+        try:
+            with httpx.Client(timeout=30.0) as client:
+                resp = client.post(
+                    "https://api.deepseek.com/chat/completions",
+                    headers={
+                        "Authorization": f"Bearer {api_key}",
+                        "Content-Type": "application/json"
+                    },
+                    json={
+                        "model": settings.DEEPSEEK_MODEL,
+                        "messages": [
+                            {"role": "system", "content": system_prompt},
+                            {"role": "user", "content": user_content}
+                        ],
+                        "response_format": {"type": "json_object"},
+                        "temperature": 0.2,
+                        "max_tokens": 2500
+                    }
+                )
+                if resp.status_code == 200:
+                    data = resp.json()
+                    content = data["choices"][0]["message"]["content"]
+                    parsed = json.loads(content)
+
+                    # Layer B Safety Validation
+                    allowed_numbers = [
+                        forecast.initial_cash_balance,
+                        forecast.final_closing_balance,
+                        forecast.net_annual_cash_flow,
+                        forecast.lowest_cash_point,
+                        forecast.total_debt_service
+                    ]
+                    if not cls.validate_llm_claims(content, allowed_numbers):
+                        logger.warning("DeepSeek output rejected by safety check.")
+                        return None
+
+                    now_str = datetime.now(timezone.utc).isoformat()
+                    period_str = f"{forecast.fiscal_year}-yil"
+                    insights_list: List[FinancialInsight] = []
+                    for idx, raw_ins in enumerate(parsed.get("insights", [])):
+                        sev_str = str(raw_ins.get("severity", "MEDIUM")).upper()
+                        sev = AlertSeverity[sev_str] if sev_str in AlertSeverity.__members__ else AlertSeverity.MEDIUM
+
+                        type_str = str(raw_ins.get("insight_type", "LIQUIDITY_DEFICIT")).upper()
+                        ins_type = InsightTypeEnum[type_str] if type_str in InsightTypeEnum.__members__ else InsightTypeEnum.LIQUIDITY_DEFICIT
+
+                        headline = raw_ins.get("headline_uz", f"Xulosa #{idx+1}")
+                        core_msg = raw_ins.get("core_message_uz", "")
+                        rec_act = raw_ins.get("recommended_action_uz", "")
+                        bullets = raw_ins.get("evidence_bullets_uz", [])
+                        if not isinstance(bullets, list):
+                            bullets = [str(bullets)] if bullets else []
+
+                        insights_list.append(
+                            FinancialInsight(
+                                insight_id=f"ins-deepseek-{uuid.uuid4().hex[:8]}",
+                                organization_id=forecast.organization_id,
+                                period=period_str,
+                                insight_type=ins_type,
+                                severity=sev,
+                                relevant_metric="deepseek_ai_intelligence",
+                                supporting_values={"source": "deepseek-chat-v3"},
+                                explanation_uz=core_msg,
+                                action_category="AI_STRATEGIC_ADVISORY",
+                                suggested_action_uz=rec_act,
+                                generation_method="DEEPSEEK_V3_FINANCIAL_INTELLIGENCE",
+                                evidence_data=[{"bullet": b} for b in bullets],
+                                created_at=now_str,
+                                headline_uz=headline,
+                                core_message_uz=core_msg,
+                                evidence_bullets_uz=bullets,
+                                recommended_action_uz=rec_act,
+                                supporting_metrics={
+                                    "model": settings.DEEPSEEK_MODEL,
+                                    "dscr": dscr_val,
+                                    "min_balance": f"{forecast.lowest_cash_point:,.0f} UZS"
+                                }
+                            )
+                        )
+
+                    disclaimer = (
+                        "MA'LUMOT: Ushbu tahliliy xulosa DeepSeek-V3 moliya neyrotarmog'i va korxonaning deterministik "
+                        "12 oylik agrar kassa hisob-kitoblari asosida shakllantirilgan. Rasmiy bank kredit kafolati hisoblanmaydi."
+                    )
+                    return AIInsightsResponse(
+                        organization_id=forecast.organization_id,
+                        financial_health_summary_uz=parsed.get("financial_health_summary_uz", ""),
+                        key_findings_uz=parsed.get("key_findings_uz", []),
+                        insights=insights_list,
+                        generation_method="DEEPSEEK_V3_FINANCIAL_INTELLIGENCE",
+                        model_version="DeepSeek-Chat (V3)",
+                        is_llm_used=True,
+                        disclaimer_uz=disclaimer
+                    )
+                else:
+                    logger.warning(f"DeepSeek API error: {resp.status_code} - {resp.text}")
+        except Exception as e:
+            logger.warning(f"DeepSeek call failed: {e}")
+            return None
+        return None
